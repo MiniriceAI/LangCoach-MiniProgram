@@ -1,0 +1,390 @@
+.container {
+  min-height: 100vh;
+  background: var(--bg-color);
+  padding-bottom: 180rpx;
+}
+
+/* 标签切换 */
+.tab-bar {
+  display: flex;
+  background: var(--card-bg);
+  padding: 20rpx 30rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx 0;
+  font-size: 30rpx;
+  color: var(--text-secondary);
+  position: relative;
+}
+
+.tab-item.active {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60rpx;
+  height: 6rpx;
+  background: var(--primary-color);
+  border-radius: 3rpx;
+}
+
+/* 内容区域 */
+.content {
+  padding: 30rpx;
+}
+
+/* 报告列表 */
+.report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.report-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.report-info {
+  flex: 1;
+}
+
+.report-scenario {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.report-meta {
+  display: flex;
+  align-items: center;
+  font-size: 24rpx;
+  color: var(--text-hint);
+}
+
+.report-date {
+  margin-right: 20rpx;
+}
+
+.report-duration {
+  display: flex;
+  align-items: center;
+}
+
+.duration-icon {
+  margin-right: 6rpx;
+}
+
+.overall-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.score-value {
+  font-size: 48rpx;
+  font-weight: 600;
+}
+
+.score-label {
+  font-size: 22rpx;
+  color: var(--text-hint);
+}
+
+/* 分数详情 */
+.report-scores {
+  display: flex;
+  padding: 24rpx;
+  background: var(--bg-color);
+}
+
+.score-item {
+  flex: 1;
+  text-align: center;
+}
+
+.score-name {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  margin-bottom: 8rpx;
+}
+
+.score-bar {
+  height: 8rpx;
+  background: #E8E8E8;
+  border-radius: 4rpx;
+  margin: 0 20rpx 8rpx;
+  overflow: hidden;
+}
+
+.score-fill {
+  height: 100%;
+  border-radius: 4rpx;
+  transition: width 0.3s ease;
+}
+
+.score-num {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+/* 报告操作 */
+.report-actions {
+  display: flex;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20rpx;
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.action-btn:not(:last-child) {
+  border-right: 1rpx solid var(--border-color);
+}
+
+.action-icon {
+  margin-right: 8rpx;
+}
+
+/* 生词卡片列表 */
+.flashcard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.flashcard-count {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+
+.review-btn {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 32rpx;
+  background: var(--primary-color);
+  color: #FFFFFF;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+}
+
+.review-btn .btn-icon {
+  margin-right: 8rpx;
+}
+
+.flashcard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.flashcard-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+}
+
+.word-info {
+  flex: 1;
+}
+
+.word-text {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 8rpx;
+}
+
+.word-phonetic {
+  font-size: 24rpx;
+  color: var(--text-hint);
+  margin-bottom: 6rpx;
+}
+
+.word-definition {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.word-actions {
+  display: flex;
+  gap: 16rpx;
+}
+
+.word-action-btn {
+  width: 64rpx;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 28rpx;
+}
+
+.word-action-btn.learned {
+  background: #E6F7E6;
+}
+
+.word-action-btn.delete {
+  background: #FFEBEE;
+}
+
+/* 复习模式 */
+.review-mode {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-color);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30rpx;
+  background: var(--card-bg);
+}
+
+.review-progress {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+}
+
+.exit-btn {
+  font-size: 28rpx;
+  color: var(--primary-color);
+}
+
+.review-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx;
+}
+
+.review-card {
+  width: 100%;
+  min-height: 400rpx;
+  background: var(--card-bg);
+  border-radius: 24rpx;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx;
+}
+
+.review-word {
+  font-size: 56rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20rpx;
+}
+
+.review-phonetic {
+  font-size: 32rpx;
+  color: var(--text-hint);
+  margin-bottom: 40rpx;
+}
+
+.review-definition {
+  font-size: 36rpx;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.tap-hint {
+  margin-top: 40rpx;
+  font-size: 26rpx;
+  color: var(--text-hint);
+}
+
+.review-actions {
+  display: flex;
+  gap: 30rpx;
+  padding: 40rpx;
+}
+
+.review-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24rpx;
+  border-radius: 40rpx;
+  font-size: 30rpx;
+}
+
+.review-action-btn.prev {
+  background: var(--bg-color);
+  color: var(--text-secondary);
+}
+
+.review-action-btn.next {
+  background: var(--primary-color);
+  color: #FFFFFF;
+}
+
+.review-action-btn.disabled {
+  opacity: 0.5;
+}
+
+/* 空状态 */
+.empty-state {
+  padding: 100rpx 60rpx;
+}
+
+.empty-icon {
+  font-size: 120rpx;
+  margin-bottom: 30rpx;
+}
+
+.empty-title {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 16rpx;
+}
+
+.empty-desc {
+  font-size: 28rpx;
+  color: var(--text-hint);
+  text-align: center;
+}

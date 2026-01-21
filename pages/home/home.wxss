@@ -1,0 +1,321 @@
+.container {
+  padding: 30rpx;
+  padding-bottom: 180rpx;
+}
+
+/* 顶部区域 */
+.header-section {
+  margin-bottom: 30rpx;
+}
+
+.greeting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.greeting-text {
+  font-size: 40rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.streak-badge {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+  padding: 8rpx 20rpx;
+  border-radius: 30rpx;
+}
+
+.streak-icon {
+  font-size: 28rpx;
+  margin-right: 6rpx;
+}
+
+.streak-count {
+  font-size: 24rpx;
+  color: #FFFFFF;
+  font-weight: 500;
+}
+
+.weekly-progress {
+  background: var(--card-bg);
+  padding: 24rpx;
+  border-radius: 20rpx;
+  box-shadow: var(--shadow);
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.progress-label {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.progress-value {
+  font-size: 26rpx;
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.progress-bar {
+  height: 12rpx;
+  background: #E8E8E8;
+  border-radius: 6rpx;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4A90D9 0%, #52C41A 100%);
+  border-radius: 6rpx;
+  transition: width 0.3s ease;
+}
+
+/* 每日挑战卡片 */
+.daily-challenge {
+  background: linear-gradient(135deg, #4A90D9 0%, #3A7BC8 100%);
+  color: #FFFFFF;
+  padding: 30rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+.daily-challenge::before {
+  content: '';
+  position: absolute;
+  top: -50rpx;
+  right: -50rpx;
+  width: 200rpx;
+  height: 200rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+}
+
+.challenge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.challenge-badge {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.badge-icon {
+  margin-right: 8rpx;
+}
+
+.badge-text {
+  font-size: 24rpx;
+}
+
+.difficulty-tag {
+  padding: 6rpx 16rpx;
+  border-radius: 16rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.challenge-content {
+  margin-bottom: 24rpx;
+}
+
+.challenge-title {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  margin-bottom: 10rpx;
+}
+
+.challenge-desc {
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+.challenge-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.time-estimate {
+  display: flex;
+  align-items: center;
+  opacity: 0.9;
+}
+
+.time-icon {
+  margin-right: 8rpx;
+}
+
+.time-text {
+  font-size: 24rpx;
+}
+
+.start-btn {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 12rpx 24rpx;
+  border-radius: 30rpx;
+  font-size: 28rpx;
+}
+
+.start-btn .arrow {
+  margin-left: 8rpx;
+}
+
+/* 快速练习 */
+.quick-section {
+  margin-bottom: 30rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 20rpx;
+}
+
+.quick-buttons {
+  display: flex;
+  gap: 20rpx;
+}
+
+.quick-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30rpx 20rpx;
+  border-radius: 20rpx;
+  color: #FFFFFF;
+  box-shadow: var(--shadow);
+}
+
+.quick-btn:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.quick-icon {
+  font-size: 48rpx;
+  margin-bottom: 12rpx;
+}
+
+.quick-name {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+
+/* 话题分类 */
+.topics-section {
+  margin-bottom: 30rpx;
+}
+
+.category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.category-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx;
+}
+
+.category-info {
+  display: flex;
+  align-items: center;
+}
+
+.category-icon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  margin-right: 20rpx;
+}
+
+.category-name {
+  font-size: 32rpx;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.category-arrow {
+  color: var(--text-hint);
+  font-size: 24rpx;
+  transition: transform 0.3s ease;
+}
+
+.category-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+/* 场景列表 */
+.scenario-list {
+  border-top: 1rpx solid var(--border-color);
+  padding: 0 24rpx;
+}
+
+.scenario-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.scenario-item:last-child {
+  border-bottom: none;
+}
+
+.scenario-name {
+  font-size: 28rpx;
+  color: var(--text-primary);
+}
+
+.scenario-right {
+  display: flex;
+  align-items: center;
+}
+
+.scenario-difficulty {
+  font-size: 24rpx;
+  font-weight: 500;
+  margin-right: 12rpx;
+}
+
+.scenario-arrow {
+  font-size: 32rpx;
+  color: var(--text-hint);
+}
+
+.scenario-item:active {
+  background: var(--bg-color);
+}

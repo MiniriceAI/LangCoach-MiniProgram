@@ -1,0 +1,182 @@
+<view class="chat-container">
+  <!-- 顶部场景信息 -->
+  <view class="chat-header">
+    <view class="scenario-info">
+      <text class="scenario-title">{{scenarioTitle}}</text>
+    </view>
+    <view class="turn-counter">{{currentTurn}}/{{maxTurns}}</view>
+  </view>
+
+  <!-- 消息列表 -->
+  <scroll-view
+    class="message-list"
+    scroll-y
+    scroll-into-view="{{scrollToMessage}}"
+    scroll-with-animation
+  >
+    <!-- 空状态 -->
+    <view class="empty-chat" wx:if="{{messages.length === 0 && !isLoading}}">
+      <text class="empty-icon">💬</text>
+      <text class="empty-title">准备开始对话</text>
+      <text class="empty-desc">点击下方按钮开始语音对话，或切换到文字输入模式</text>
+    </view>
+
+    <!-- 消息列表 -->
+    <view
+      class="message-item {{item.role}}"
+      wx:for="{{messages}}"
+      wx:key="id"
+      id="{{item.id}}"
+    >
+      <image
+        class="avatar"
+        src="{{item.role === 'assistant' ? '/images/ai-avatar.png' : '/images/user-avatar.png'}}"
+        mode="aspectFill"
+      />
+      <view class="message-content">
+        <!-- 语音消息 -->
+        <view
+          class="bubble voice-bubble"
+          wx:if="{{item.type === 'voice'}}"
+          data-id="{{item.id}}"
+          data-url="{{item.audioUrl}}"
+          bindtap="playAudio"
+        >
+          <text class="voice-icon">🎤</text>
+          <text class="voice-duration">{{item.duration}}"</text>
+          <view class="voice-waves" wx:if="{{playingMessageId === item.id}}">
+            <view class="wave"></view>
+            <view class="wave"></view>
+            <view class="wave"></view>
+            <view class="wave"></view>
+          </view>
+        </view>
+
+        <!-- 文本消息 -->
+        <view class="bubble" wx:else>
+          <chat-bubble
+            content="{{item.content}}"
+            role="{{item.role}}"
+            bind:wordtap="onWordTap"
+          />
+        </view>
+
+        <!-- 转写文本 -->
+        <view class="transcription" wx:if="{{item.type === 'voice' && item.content}}">
+          <text wx:if="{{item.transcribing}}">识别中...</text>
+          <text wx:else>{{item.content}}</text>
+        </view>
+
+        <!-- 语法反馈 -->
+        <view class="grammar-feedback" wx:if="{{item.feedback}}">
+          <text class="feedback-title">💡 语法提示</text>
+          <text class="feedback-text">{{item.feedback}}</text>
+        </view>
+
+        <!-- 消息时间 -->
+        <view class="message-time">
+          {{item.timestamp ? (item.timestamp | formatTime) : ''}}
+        </view>
+
+        <!-- AI消息反馈按钮 -->
+        <view class="feedback-actions" wx:if="{{item.role === 'assistant'}}">
+          <view
+            class="feedback-btn {{item.userFeedback === 'up' ? 'active' : ''}}"
+            data-id="{{item.id}}"
+            data-type="up"
+            bindtap="onFeedback"
+          >👍</view>
+          <view
+            class="feedback-btn {{item.userFeedback === 'down' ? 'active' : ''}}"
+            data-id="{{item.id}}"
+            data-type="down"
+            bindtap="onFeedback"
+          >👎</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载状态 -->
+    <view class="message-item assistant" wx:if="{{isLoading}}">
+      <image class="avatar" src="/images/ai-avatar.png" mode="aspectFill" />
+      <view class="message-content">
+        <view class="loading-message">
+          <view class="loading-dots">
+            <view class="dot"></view>
+            <view class="dot"></view>
+            <view class="dot"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 底部输入区域 -->
+  <view class="input-area" style="padding-bottom: {{keyboardHeight > 0 ? keyboardHeight + 'px' : 'calc(20rpx + env(safe-area-inset-bottom))'}}">
+    <view class="input-wrapper">
+      <!-- 切换按钮 -->
+      <view class="mode-switch" bindtap="toggleInputMode">
+        <text>{{inputMode === 'voice' ? '⌨️' : '🎤'}}</text>
+      </view>
+
+      <!-- 语音输入 -->
+      <view class="voice-input-wrapper" wx:if="{{inputMode === 'voice'}}">
+        <view
+          class="voice-btn {{isRecording ? 'recording' : ''}}"
+          bindtouchstart="startRecording"
+          bindtouchend="stopRecording"
+          bindtouchcancel="cancelRecording"
+        >
+          <text>{{isRecording ? '松开发送' : '按住说话'}}</text>
+        </view>
+      </view>
+
+      <!-- 文字输入 -->
+      <view class="text-input-wrapper" wx:else>
+        <input
+          class="text-input"
+          placeholder="输入消息..."
+          value="{{inputText}}"
+          bindinput="onInputChange"
+          bindconfirm="sendTextMessage"
+          confirm-type="send"
+          adjust-position="{{false}}"
+          bindkeyboardheightchange="onKeyboardHeightChange"
+        />
+      </view>
+
+      <!-- 发送按钮 -->
+      <view
+        class="send-btn {{inputText ? '' : 'disabled'}}"
+        wx:if="{{inputMode === 'text'}}"
+        bindtap="sendTextMessage"
+      >
+        <text style="color: #fff; font-size: 36rpx;">➤</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 录音状态遮罩 -->
+  <view class="recording-overlay" wx:if="{{isRecording}}">
+    <view class="recording-indicator">
+      <view class="recording-icon">
+        <text class="mic-icon">🎤</text>
+      </view>
+      <text class="recording-time">{{recordingDuration}}"</text>
+      <text class="recording-tip">松开发送，上滑取消</text>
+    </view>
+    <view class="cancel-area">
+      <text class="cancel-text">↑ 上滑取消</text>
+    </view>
+  </view>
+
+  <!-- 评分弹窗 -->
+  <rating-modal
+    wx:if="{{showRatingModal}}"
+    show="{{showRatingModal}}"
+    report="{{sessionReport}}"
+    bind:submit="onRatingSubmit"
+    bind:close="closeRatingModal"
+    bind:restart="restartSession"
+  />
+</view>

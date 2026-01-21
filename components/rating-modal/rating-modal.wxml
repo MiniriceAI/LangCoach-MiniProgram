@@ -1,0 +1,80 @@
+<view class="modal-overlay" wx:if="{{show}}" bindtap="close">
+  <view class="modal-content" catchtap="stopPropagation">
+    <!-- 报告头部 -->
+    <view class="modal-header">
+      <text class="modal-title">对话完成！</text>
+      <text class="close-btn" bindtap="close">×</text>
+    </view>
+
+    <!-- 分数展示 -->
+    <view class="score-section" wx:if="{{report}}">
+      <view class="overall-score">
+        <text class="score-number">{{report.grammarScore + report.vocabularyScore + report.fluencyScore > 0 ? Math.round((report.grammarScore + report.vocabularyScore + report.fluencyScore) / 3) : '--'}}</text>
+        <text class="score-label">综合评分</text>
+      </view>
+
+      <view class="score-details">
+        <view class="score-item">
+          <text class="item-label">语法</text>
+          <view class="score-bar">
+            <view class="score-fill" style="width: {{report.grammarScore}}%; background: {{report.grammarScore >= 80 ? '#52C41A' : report.grammarScore >= 60 ? '#FAAD14' : '#FF4D4F'}}"></view>
+          </view>
+          <text class="item-value">{{report.grammarScore}}</text>
+        </view>
+        <view class="score-item">
+          <text class="item-label">词汇</text>
+          <view class="score-bar">
+            <view class="score-fill" style="width: {{report.vocabularyScore}}%; background: {{report.vocabularyScore >= 80 ? '#52C41A' : report.vocabularyScore >= 60 ? '#FAAD14' : '#FF4D4F'}}"></view>
+          </view>
+          <text class="item-value">{{report.vocabularyScore}}</text>
+        </view>
+        <view class="score-item">
+          <text class="item-label">流利度</text>
+          <view class="score-bar">
+            <view class="score-fill" style="width: {{report.fluencyScore}}%; background: {{report.fluencyScore >= 80 ? '#52C41A' : report.fluencyScore >= 60 ? '#FAAD14' : '#FF4D4F'}}"></view>
+          </view>
+          <text class="item-value">{{report.fluencyScore}}</text>
+        </view>
+      </view>
+
+      <!-- 改进建议 -->
+      <view class="tips-section" wx:if="{{report.tips && report.tips.length}}">
+        <text class="tips-title">💡 改进建议</text>
+        <view class="tips-list">
+          <text class="tip-item" wx:for="{{report.tips}}" wx:key="index">• {{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 评分区域 -->
+    <view class="rating-section">
+      <text class="rating-title">为本次对话打分</text>
+      <view class="star-rating">
+        <text
+          class="star {{rating >= item ? 'active' : ''}}"
+          wx:for="{{[1,2,3,4,5]}}"
+          wx:key="*this"
+          data-rating="{{item}}"
+          bindtap="setRating"
+        >★</text>
+      </view>
+    </view>
+
+    <!-- 反馈输入 -->
+    <view class="feedback-section">
+      <textarea
+        class="feedback-input"
+        placeholder="有什么建议或意见？（选填）"
+        value="{{feedback}}"
+        bindinput="onFeedbackInput"
+        maxlength="200"
+      />
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="modal-actions">
+      <view class="action-btn secondary" bindtap="restart">再来一次</view>
+      <view class="action-btn primary" bindtap="submit">提交反馈</view>
+    </view>
+  </view>
+</view>

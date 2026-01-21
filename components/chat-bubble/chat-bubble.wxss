@@ -1,0 +1,21 @@
+.bubble-content {
+  display: inline;
+  line-height: 1.6;
+}
+
+.word {
+  display: inline;
+}
+
+.word.clickable:active {
+  background: rgba(74, 144, 217, 0.2);
+  border-radius: 4rpx;
+}
+
+.bubble-content.user .word {
+  color: #FFFFFF;
+}
+
+.bubble-content.assistant .word {
+  color: #333333;
+}

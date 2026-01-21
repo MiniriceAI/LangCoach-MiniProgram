@@ -1,0 +1,9 @@
+<view class="bubble-content {{role}}">
+  <text
+    class="word {{role === 'assistant' ? 'clickable' : ''}}"
+    wx:for="{{words}}"
+    wx:key="index"
+    data-word="{{item}}"
+    bindtap="onWordTap"
+  >{{item}}</text>
+</view>

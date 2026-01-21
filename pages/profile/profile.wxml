@@ -1,0 +1,204 @@
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="user-card">
+    <view class="user-info" wx:if="{{userInfo}}">
+      <image class="avatar" src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}" mode="aspectFill" />
+      <view class="user-detail">
+        <view class="nickname">{{userInfo.nickName || '学习者'}}</view>
+        <view class="level-badge">
+          <text class="level-icon">🎯</text>
+          <text>{{currentLevel}} 级别</text>
+        </view>
+      </view>
+    </view>
+    <view class="user-info" wx:else>
+      <button class="login-btn" bindtap="handleLogin">
+        <text>点击登录</text>
+      </button>
+    </view>
+
+    <!-- 统计数据 -->
+    <view class="stats-row">
+      <view class="stat-item">
+        <view class="stat-value">{{stats.totalMinutes}}</view>
+        <view class="stat-label">学习分钟</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-value">{{stats.totalSessions}}</view>
+        <view class="stat-label">完成对话</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-value">{{stats.wordsLearned}}</view>
+        <view class="stat-label">学习单词</view>
+      </view>
+      <view class="stat-item">
+        <view class="stat-value">{{stats.currentStreak}}</view>
+        <view class="stat-label">连续天数</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 成就徽章 -->
+  <view class="achievement-section">
+    <view class="section-header">
+      <text class="section-title">我的成就</text>
+      <text class="view-all" bindtap="viewAllAchievements">查看全部</text>
+    </view>
+    <scroll-view class="achievement-list" scroll-x>
+      <view
+        class="achievement-item card {{item.unlocked ? '' : 'locked'}}"
+        wx:for="{{achievements}}"
+        wx:key="id"
+      >
+        <view class="achievement-icon">{{item.icon}}</view>
+        <text class="achievement-name">{{item.name}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 设置列表 -->
+  <view class="settings-section">
+    <!-- 学习设置 -->
+    <view class="settings-group">
+      <view class="group-title">学习设置</view>
+      <view class="settings-list card">
+        <view class="setting-item" bindtap="showLevelSelector">
+          <view class="setting-left">
+            <view class="setting-icon">📊</view>
+            <text class="setting-name">难度等级</text>
+          </view>
+          <view class="setting-right">
+            <text class="setting-value">{{currentLevel}}</text>
+            <text class="setting-arrow">›</text>
+          </view>
+        </view>
+        <view class="setting-item" bindtap="showTurnsSelector">
+          <view class="setting-left">
+            <view class="setting-icon">💬</view>
+            <text class="setting-name">对话轮数</text>
+          </view>
+          <view class="setting-right">
+            <text class="setting-value">{{currentTurns}}轮</text>
+            <text class="setting-arrow">›</text>
+          </view>
+        </view>
+        <view class="setting-item">
+          <view class="setting-left">
+            <view class="setting-icon">🔊</view>
+            <text class="setting-name">自动播放语音</text>
+          </view>
+          <view class="setting-right">
+            <switch class="switch" checked="{{autoPlayAudio}}" bindchange="toggleAutoPlay" />
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 通用设置 -->
+    <view class="settings-group">
+      <view class="group-title">通用设置</view>
+      <view class="settings-list card">
+        <view class="setting-item">
+          <view class="setting-left">
+            <view class="setting-icon">🔔</view>
+            <text class="setting-name">学习提醒</text>
+          </view>
+          <view class="setting-right">
+            <switch class="switch" checked="{{enableReminder}}" bindchange="toggleReminder" />
+          </view>
+        </view>
+        <view class="setting-item" bindtap="clearCache">
+          <view class="setting-left">
+            <view class="setting-icon">🗑️</view>
+            <text class="setting-name">清除缓存</text>
+          </view>
+          <view class="setting-right">
+            <text class="setting-value">{{cacheSize}}</text>
+            <text class="setting-arrow">›</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 关于 -->
+    <view class="settings-group">
+      <view class="group-title">关于</view>
+      <view class="settings-list card">
+        <view class="setting-item" bindtap="showAbout">
+          <view class="setting-left">
+            <view class="setting-icon">ℹ️</view>
+            <text class="setting-name">关于 LangCoach</text>
+          </view>
+          <view class="setting-right">
+            <text class="setting-arrow">›</text>
+          </view>
+        </view>
+        <view class="setting-item" bindtap="showFeedback">
+          <view class="setting-left">
+            <view class="setting-icon">💌</view>
+            <text class="setting-name">意见反馈</text>
+          </view>
+          <view class="setting-right">
+            <text class="setting-arrow">›</text>
+          </view>
+        </view>
+        <button class="setting-item" open-type="share" style="background: var(--card-bg); border: none; text-align: left; padding: 30rpx 24rpx;">
+          <view class="setting-left">
+            <view class="setting-icon">📤</view>
+            <text class="setting-name">分享给朋友</text>
+          </view>
+          <view class="setting-right">
+            <text class="setting-arrow">›</text>
+          </view>
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-info">
+    <text>LangCoach v1.0.0</text>
+  </view>
+
+  <!-- 难度选择器 -->
+  <view class="overlay" wx:if="{{showLevelPicker}}" bindtap="hideLevelSelector"></view>
+  <view class="level-selector {{showLevelPicker ? 'show' : ''}}">
+    <view class="selector-header">
+      <text class="selector-title">选择难度等级</text>
+      <text class="selector-close" bindtap="hideLevelSelector">×</text>
+    </view>
+    <view class="level-options">
+      <view
+        class="level-option {{currentLevel === item.code ? 'selected' : ''}}"
+        wx:for="{{levelOptions}}"
+        wx:key="code"
+        data-level="{{item.code}}"
+        bindtap="selectLevel"
+      >
+        <view class="level-code">{{item.code}}</view>
+        <view class="level-desc">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 轮数选择器 -->
+  <view class="overlay" wx:if="{{showTurnsPicker}}" bindtap="hideTurnsSelector"></view>
+  <view class="level-selector {{showTurnsPicker ? 'show' : ''}}">
+    <view class="selector-header">
+      <text class="selector-title">选择对话轮数</text>
+      <text class="selector-close" bindtap="hideTurnsSelector">×</text>
+    </view>
+    <view class="level-options">
+      <view
+        class="level-option {{currentTurns === item.value ? 'selected' : ''}}"
+        wx:for="{{turnsOptions}}"
+        wx:key="value"
+        data-turns="{{item.value}}"
+        bindtap="selectTurns"
+      >
+        <view class="level-code">{{item.value}}</view>
+        <view class="level-desc">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+</view>

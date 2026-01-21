@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "对话练习",
+  "usingComponents": {
+    "chat-bubble": "/components/chat-bubble/chat-bubble",
+    "rating-modal": "/components/rating-modal/rating-modal"
+  },
+  "disableScroll": true
+}

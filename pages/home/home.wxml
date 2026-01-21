@@ -1,0 +1,114 @@
+<view class="container">
+  <!-- 顶部欢迎区域 -->
+  <view class="header-section">
+    <view class="greeting">
+      <text class="greeting-text">Hi，准备好练习了吗？</text>
+      <view class="streak-badge" wx:if="{{stats.streak > 0}}">
+        <text class="streak-icon">🔥</text>
+        <text class="streak-count">{{stats.streak}}天</text>
+      </view>
+    </view>
+    <view class="weekly-progress">
+      <view class="progress-info">
+        <text class="progress-label">本周目标</text>
+        <text class="progress-value">{{stats.todayMinutes}}/{{stats.weeklyGoal}}分钟</text>
+      </view>
+      <view class="progress-bar">
+        <view class="progress-fill" style="width: {{stats.weeklyProgress}}%"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 每日挑战卡片 -->
+  <view class="daily-challenge card" bindtap="startDailyChallenge">
+    <view class="challenge-header">
+      <view class="challenge-badge">
+        <text class="badge-icon">⭐</text>
+        <text class="badge-text">每日挑战</text>
+      </view>
+      <view class="difficulty-tag" style="background: {{dailyChallenge.difficulty === 'A1' || dailyChallenge.difficulty === 'A2' ? '#52C41A' : dailyChallenge.difficulty === 'B1' || dailyChallenge.difficulty === 'B2' ? '#FAAD14' : '#FF4D4F'}}">
+        {{dailyChallenge.difficulty}}
+      </view>
+    </view>
+    <view class="challenge-content">
+      <text class="challenge-title">{{dailyChallenge.title}}</text>
+      <text class="challenge-desc">{{dailyChallenge.description}}</text>
+    </view>
+    <view class="challenge-footer">
+      <view class="time-estimate">
+        <text class="time-icon">⏱️</text>
+        <text class="time-text">约{{dailyChallenge.estimatedTime}}分钟</text>
+      </view>
+      <view class="start-btn">
+        <text>开始挑战</text>
+        <text class="arrow">→</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快速练习 -->
+  <view class="quick-section">
+    <view class="section-title">快速开始</view>
+    <view class="quick-buttons">
+      <view
+        class="quick-btn"
+        wx:for="{{quickScenarios}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="startQuickPractice"
+        style="background: {{item.color}}"
+      >
+        <text class="quick-icon">{{item.icon}}</text>
+        <text class="quick-name">{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 话题分类 -->
+  <view class="topics-section">
+    <view class="section-title">选择话题</view>
+    <view class="category-list">
+      <view
+        class="category-card card {{expandedCategory === item.id ? 'expanded' : ''}}"
+        wx:for="{{categories}}"
+        wx:key="id"
+      >
+        <view
+          class="category-header"
+          data-id="{{item.id}}"
+          bindtap="toggleCategory"
+        >
+          <view class="category-info">
+            <view class="category-icon" style="background: {{item.color}}20">
+              <text>{{item.icon}}</text>
+            </view>
+            <text class="category-name">{{item.name}}</text>
+          </view>
+          <view class="category-arrow {{expandedCategory === item.id ? 'rotated' : ''}}">
+            <text>▼</text>
+          </view>
+        </view>
+
+        <view class="scenario-list" wx:if="{{expandedCategory === item.id}}">
+          <view
+            class="scenario-item"
+            wx:for="{{item.scenarios}}"
+            wx:for-item="scenario"
+            wx:key="id"
+            data-category="{{item.id}}"
+            data-scenario="{{scenario.id}}"
+            bindtap="selectScenario"
+          >
+            <text class="scenario-name">{{scenario.name}}</text>
+            <view class="scenario-right">
+              <view class="scenario-difficulty" style="color: {{scenario.difficulty === 'A1' || scenario.difficulty === 'A2' ? '#52C41A' : scenario.difficulty === 'B1' || scenario.difficulty === 'B2' ? '#FAAD14' : '#FF4D4F'}}">
+                {{scenario.difficulty}}
+              </view>
+              <text class="scenario-arrow">›</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
