@@ -2,6 +2,7 @@ App({
   globalData: {
     userInfo: null,
     sessionId: null,
+    // API 基础地址 - 与 utils/api.js 中的 BASE_URL 保持一致
     baseUrl: 'https://www.minirice.xyz',
     // 会话配置
     settings: {

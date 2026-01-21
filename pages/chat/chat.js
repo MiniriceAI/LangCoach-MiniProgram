@@ -97,17 +97,25 @@ Page({
   loadScenario() {
     const scenario = app.globalData.settings.scenario;
     const settings = app.globalData.settings;
-    
+
     let scenarioTitle = '自由对话';
-    if (scenario && scenario.scenario) {
-      const scenarioData = ScenarioUtils.getScenario(scenario.scenario);
-      scenarioTitle = scenarioData ? scenarioData.title : scenario.title || '对话练习';
-    } else if (scenario && scenario.title) {
-      scenarioTitle = scenario.title;
+    let scenarioId = null;
+
+    // 处理场景配置 - 支持两种格式:
+    // 1. { scenario: 'job_interview', title: '...' } - 来自 home 页面
+    // 2. { id: 'job_interview', name: '...' } - 来自场景列表
+    if (scenario) {
+      scenarioId = scenario.scenario || scenario.id;
+      if (scenarioId) {
+        const scenarioData = ScenarioUtils.getScenario(scenarioId);
+        scenarioTitle = scenarioData ? scenarioData.name : scenario.title || scenario.name || '对话练习';
+      } else if (scenario.title || scenario.name) {
+        scenarioTitle = scenario.title || scenario.name;
+      }
     }
 
     this.setData({
-      scenario: scenario,
+      scenario: scenario ? { ...scenario, scenario: scenarioId } : null,
       scenarioTitle: scenarioTitle,
       maxTurns: settings.turns,
       messages: [],
@@ -160,7 +168,10 @@ Page({
   // 获取默认开场白
   getDefaultGreeting() {
     const greetings = {
-      'interview': "Hello! I'm your interviewer today. Please have a seat and let's begin. Could you start by telling me a little about yourself?",
+      'job_interview': "Hello! I'm your interviewer today. Please have a seat and let's begin. Could you start by telling me a little about yourself?",
+      'hotel_checkin': "Good evening! Welcome to our hotel. I'll be helping you with check-in today. May I have your name and reservation details, please?",
+      'renting': "Hi there! I'm the property manager. I understand you're interested in renting this apartment. Would you like me to show you around first?",
+      'salary_negotiation': "Thank you for coming in today. We've reviewed your application and would like to discuss the compensation package. What are your salary expectations?",
       'restaurant': "Good evening! Welcome to our restaurant. I'll be your server tonight. Can I start you off with something to drink?",
       'airport': "Good morning! Welcome to the check-in counter. May I see your passport and booking confirmation, please?",
       'default': "Hi there! I'm your English practice partner. What would you like to talk about today?"
@@ -281,15 +292,20 @@ Page({
         url: `${app.globalData.baseUrl}/api/transcribe`,
         filePath: filePath,
         name: 'audio',
+        timeout: 120000,  // 语音识别需要更长时间
         formData: {
-          session_id: this.data.sessionId
+          session_id: this.data.sessionId || ''
         },
         success: (res) => {
-          const data = JSON.parse(res.data);
-          if (data.text) {
-            resolve(data.text);
-          } else {
-            reject(new Error('转写失败'));
+          try {
+            const data = JSON.parse(res.data);
+            if (data.text) {
+              resolve(data.text);
+            } else {
+              reject(new Error('转写失败'));
+            }
+          } catch (e) {
+            reject(new Error('解析响应失败'));
           }
         },
         fail: reject
@@ -501,8 +517,9 @@ Page({
         url: `${app.globalData.baseUrl}${url}`,
         method: options.method || 'GET',
         data: options.data,
+        timeout: options.timeout || 60000,  // 默认60秒超时
         header: {
-          'Authorization': `Bearer ${app.globalData.sessionId}`,
+          'Authorization': `Bearer ${app.globalData.sessionId || ''}`,
           'Content-Type': 'application/json'
         },
         success: (res) => {

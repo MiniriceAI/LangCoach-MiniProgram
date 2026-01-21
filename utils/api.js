@@ -1,10 +1,21 @@
 /**
  * API 请求封装
+ *
+ * LangCoach Mini Program API Client
+ *
+ * 服务端架构:
+ * - Chat API (端口 8700): 处理对话、认证、字典等
+ * - Speech API (端口 8600): 处理 TTS/STT
+ *
+ * 小程序通过 Chat API 统一访问所有功能
  */
 
 const app = getApp();
 
-const BASE_URL = 'https://7lkzpnb7pui8rb-8600.proxy.runpod.net';
+// API 基础地址 - 指向 Chat API 服务
+// 开发环境可以使用本地地址，生产环境使用域名
+const BASE_URL = 'https://www.minirice.xyz';  // 生产环境
+// const BASE_URL = 'http://localhost:8700';  // 本地开发
 
 /**
  * 通用请求方法
@@ -109,8 +120,8 @@ const api = {
 
   // 对话相关
   chat: {
-    start: (data) => request('/api/chat/start', { method: 'POST', data }),
-    message: (data) => request('/api/chat/message', { method: 'POST', data }),
+    start: (data) => request('/api/chat/start', { method: 'POST', data, timeout: 60000 }),
+    message: (data) => request('/api/chat/message', { method: 'POST', data, timeout: 60000 }),
     rate: (data) => request('/api/chat/rate', { method: 'POST', data }),
     feedback: (data) => request('/api/chat/feedback', { method: 'POST', data })
   },
@@ -119,9 +130,19 @@ const api = {
   speech: {
     transcribe: (filePath, sessionId) => uploadFile('/api/transcribe', filePath, {
       name: 'audio',
-      formData: { session_id: sessionId }
+      formData: { session_id: sessionId || '' },
+      timeout: 120000  // 语音识别需要更长时间
     }),
-    synthesize: (text) => request('/api/synthesize', { method: 'POST', data: { text } })
+    synthesize: (text, speaker = 'Ceylia', fastMode = true) => request('/api/synthesize', {
+      method: 'POST',
+      data: { text, speaker, fast_mode: fastMode },
+      timeout: 60000
+    })
+  },
+
+  // 场景列表
+  scenarios: {
+    list: () => request('/api/scenarios')
   },
 
   // 学习报告
@@ -140,7 +161,10 @@ const api = {
     profile: () => request('/api/user/profile'),
     updateSettings: (data) => request('/api/user/settings', { method: 'PUT', data }),
     stats: () => request('/api/user/stats')
-  }
+  },
+
+  // 健康检查
+  health: () => request('/health')
 };
 
 module.exports = {
