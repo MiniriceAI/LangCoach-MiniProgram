@@ -46,8 +46,8 @@
     "disableSWC": true
   },
   "compileType": "miniprogram",
-  "libVersion": "3.3.4",
-  "appid": "wx47895777136cb26d",
+  "libVersion": "3.14.0",
+  "appid": "wxb6ab9bed5f1a5386",
   "projectname": "LangCoach",
   "condition": {},
   "editorSetting": {

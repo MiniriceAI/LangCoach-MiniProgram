@@ -1,6 +1,6 @@
 {
   "libVersion": "3.14.0",
-  "projectname": "LangCoach",
+  "projectname": "LangCoach-MiniProgram",
   "condition": {},
   "setting": {
     "urlCheck": true,
