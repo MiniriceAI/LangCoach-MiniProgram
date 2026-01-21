@@ -1,21 +1,26 @@
 /**
- * API 请求封装
- *
  * LangCoach Mini Program API Client
  *
- * 服务端架构:
- * - Chat API (端口 8700): 处理对话、认证、字典等
- * - Speech API (端口 8600): 处理 TTS/STT
+ * 统一的 API 请求封装
+ * 服务端地址: 端口 8600
  *
- * 小程序通过 Chat API 统一访问所有功能
+ * API 接口:
+ * - /api/chat/start     - 开始对话
+ * - /api/chat/message   - 发送消息
+ * - /api/chat/rate      - 评价会话
+ * - /api/chat/feedback  - 消息反馈
+ * - /api/transcribe     - 语音转文字
+ * - /api/synthesize     - 文字转语音
+ * - /api/dictionary     - 词典查询
+ * - /api/scenarios      - 场景列表
+ * - /api/auth/wechat    - 微信登录
  */
 
 const app = getApp();
 
-// API 基础地址 - 指向 Chat API 服务
-// 开发环境可以使用本地地址，生产环境使用域名
+// API 基础地址 - 统一端口 8600
 const BASE_URL = 'https://www.minirice.xyz';  // 生产环境
-// const BASE_URL = 'http://localhost:8700';  // 本地开发
+// const BASE_URL = 'http://localhost:8600';  // 本地开发
 
 /**
  * 通用请求方法
@@ -31,21 +36,20 @@ function request(url, options = {}) {
       url: `${BASE_URL}${url}`,
       method: options.method || 'GET',
       data: options.data,
+      timeout: options.timeout || 60000,
       header: {
         'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : '',
         ...options.header
       },
-      timeout: options.timeout || 30000,
       success: (res) => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve(res.data);
         } else if (res.statusCode === 401) {
-          // Token 过期，尝试重新登录
           handleUnauthorized();
           reject(new Error('登录已过期，请重新登录'));
         } else {
-          reject(new Error(res.data?.message || `请求失败: ${res.statusCode}`));
+          reject(new Error(res.data?.detail || res.data?.message || `请求失败: ${res.statusCode}`));
         }
       },
       fail: (err) => {
@@ -85,6 +89,7 @@ function uploadFile(url, filePath, options = {}) {
       url: `${BASE_URL}${url}`,
       filePath: filePath,
       name: options.name || 'file',
+      timeout: options.timeout || 120000,
       formData: options.formData || {},
       header: {
         'Authorization': token ? `Bearer ${token}` : '',
@@ -112,18 +117,42 @@ function uploadFile(url, filePath, options = {}) {
 
 // API 方法集合
 const api = {
+  // 健康检查
+  health: () => request('/health'),
+
   // 认证相关
   auth: {
-    login: (code) => request('/api/auth/wechat', { method: 'POST', data: { code } }),
-    logout: () => request('/api/auth/logout', { method: 'POST' })
+    wechatLogin: (code) => request('/api/auth/wechat', {
+      method: 'POST',
+      data: { code }
+    })
+  },
+
+  // 场景相关
+  scenarios: {
+    list: () => request('/api/scenarios')
   },
 
   // 对话相关
   chat: {
-    start: (data) => request('/api/chat/start', { method: 'POST', data, timeout: 60000 }),
-    message: (data) => request('/api/chat/message', { method: 'POST', data, timeout: 60000 }),
-    rate: (data) => request('/api/chat/rate', { method: 'POST', data }),
-    feedback: (data) => request('/api/chat/feedback', { method: 'POST', data })
+    start: (data) => request('/api/chat/start', {
+      method: 'POST',
+      data,
+      timeout: 60000
+    }),
+    message: (data) => request('/api/chat/message', {
+      method: 'POST',
+      data,
+      timeout: 60000
+    }),
+    rate: (data) => request('/api/chat/rate', {
+      method: 'POST',
+      data
+    }),
+    feedback: (data) => request('/api/chat/feedback', {
+      method: 'POST',
+      data
+    })
   },
 
   // 语音相关
@@ -131,7 +160,7 @@ const api = {
     transcribe: (filePath, sessionId) => uploadFile('/api/transcribe', filePath, {
       name: 'audio',
       formData: { session_id: sessionId || '' },
-      timeout: 120000  // 语音识别需要更长时间
+      timeout: 120000
     }),
     synthesize: (text, speaker = 'Ceylia', fastMode = true) => request('/api/synthesize', {
       method: 'POST',
@@ -140,31 +169,15 @@ const api = {
     })
   },
 
-  // 场景列表
-  scenarios: {
-    list: () => request('/api/scenarios')
-  },
-
-  // 学习报告
-  reports: {
-    list: () => request('/api/reports'),
-    detail: (id) => request(`/api/reports/${id}`)
-  },
-
   // 词典
   dictionary: {
     lookup: (word) => request('/api/dictionary', { data: { word } })
   },
 
-  // 用户相关
-  user: {
-    profile: () => request('/api/user/profile'),
-    updateSettings: (data) => request('/api/user/settings', { method: 'PUT', data }),
-    stats: () => request('/api/user/stats')
-  },
-
-  // 健康检查
-  health: () => request('/health')
+  // TTS 语音角色
+  speakers: {
+    list: () => request('/api/speakers')
+  }
 };
 
 module.exports = {
