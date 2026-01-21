@@ -4,7 +4,7 @@
 
 const app = getApp();
 
-const BASE_URL = 'https://www.minirice.xyz';
+const BASE_URL = 'https://7lkzpnb7pui8rb-8600.proxy.runpod.net';
 
 /**
  * 通用请求方法
