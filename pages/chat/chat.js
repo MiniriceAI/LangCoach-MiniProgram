@@ -1,5 +1,6 @@
 const app = getApp();
 const { ScenarioUtils } = require('../../utils/scenarios');
+const { api } = require('../../utils/api');
 
 Page({
   data: {
@@ -132,13 +133,10 @@ Page({
     this.setData({ isLoading: true });
 
     try {
-      const response = await this.request('/api/chat/start', {
-        method: 'POST',
-        data: {
-          scenario: this.data.scenario,
-          level: app.globalData.settings.level,
-          turns: this.data.maxTurns
-        }
+      const response = await api.chat.start({
+        scenario: this.data.scenario,
+        level: app.globalData.settings.level,
+        turns: this.data.maxTurns
       });
 
       this.setData({
@@ -332,12 +330,9 @@ Page({
     this.setData({ isLoading: true });
 
     try {
-      const response = await this.request('/api/chat/message', {
-        method: 'POST',
-        data: {
-          session_id: this.data.sessionId,
-          message: text
-        }
+      const response = await api.chat.message({
+        session_id: this.data.sessionId,
+        message: text
       });
 
       this.setData({
@@ -412,10 +407,7 @@ Page({
     const { word } = e.detail;
     wx.showLoading({ title: '查询中...' });
 
-    this.request('/api/dictionary', {
-      method: 'GET',
-      data: { word }
-    }).then(res => {
+    api.dictionary.lookup(word).then(res => {
       wx.hideLoading();
       wx.showModal({
         title: word,
@@ -468,13 +460,10 @@ Page({
   onRatingSubmit(e) {
     const { rating, feedback } = e.detail;
 
-    this.request('/api/chat/rate', {
-      method: 'POST',
-      data: {
-        session_id: this.data.sessionId,
-        rating,
-        feedback
-      }
+    api.chat.rate({
+      session_id: this.data.sessionId,
+      rating,
+      feedback
     }).catch(console.error);
 
     // 更新统计
@@ -510,30 +499,6 @@ Page({
     this.setData({ keyboardHeight: e.detail.height });
   },
 
-  // 网络请求封装
-  request(url, options = {}) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: `${app.globalData.baseUrl}${url}`,
-        method: options.method || 'GET',
-        data: options.data,
-        timeout: options.timeout || 60000,  // 默认60秒超时
-        header: {
-          'Authorization': `Bearer ${app.globalData.sessionId || ''}`,
-          'Content-Type': 'application/json'
-        },
-        success: (res) => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve(res.data);
-          } else {
-            reject(new Error(res.data?.message || '请求失败'));
-          }
-        },
-        fail: reject
-      });
-    });
-  },
-
   // 清理资源
   cleanup() {
     this.stopRecordingTimer();
@@ -545,13 +510,10 @@ Page({
   // 给AI消息点赞/踩
   onFeedback(e) {
     const { id, type } = e.currentTarget.dataset;
-    this.request('/api/chat/feedback', {
-      method: 'POST',
-      data: {
-        session_id: this.data.sessionId,
-        message_id: id,
-        feedback: type
-      }
+    api.chat.feedback({
+      session_id: this.data.sessionId,
+      message_id: id,
+      feedback: type
     }).catch(console.error);
 
     // 更新本地状态

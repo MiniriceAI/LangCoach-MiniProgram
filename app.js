@@ -1,3 +1,5 @@
+const { api } = require('./utils/api');
+
 App({
   globalData: {
     userInfo: null,
@@ -63,24 +65,21 @@ App({
   async login() {
     return new Promise((resolve, reject) => {
       wx.login({
-        success: (res) => {
+        success: async (res) => {
           if (res.code) {
-            // 发送 code 到后端换取 session
-            wx.request({
-              url: `${this.globalData.baseUrl}/api/auth/wechat`,
-              method: 'POST',
-              data: { code: res.code },
-              success: (response) => {
-                if (response.data && response.data.token) {
-                  this.globalData.sessionId = response.data.token;
-                  wx.setStorageSync('token', response.data.token);
-                  resolve(response.data);
-                } else {
-                  reject(new Error('登录失败'));
-                }
-              },
-              fail: reject
-            });
+            try {
+              // 使用统一API发送 code 到后端换取 session
+              const response = await api.auth.wechatLogin(res.code);
+              if (response && response.token) {
+                this.globalData.sessionId = response.token;
+                wx.setStorageSync('token', response.token);
+                resolve(response);
+              } else {
+                reject(new Error('登录失败'));
+              }
+            } catch (error) {
+              reject(error);
+            }
           } else {
             reject(new Error('获取登录凭证失败'));
           }

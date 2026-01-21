@@ -171,7 +171,7 @@ const api = {
 
   // 词典
   dictionary: {
-    lookup: (word) => request('/api/dictionary', { data: { word } })
+    lookup: (word) => request(`/api/dictionary?word=${encodeURIComponent(word)}`)
   },
 
   // TTS 语音角色

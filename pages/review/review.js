@@ -1,4 +1,5 @@
 const app = getApp();
+const { api } = require('../../utils/api');
 
 Page({
   data: {
@@ -46,20 +47,12 @@ Page({
 
   // 加载学习报告
   async loadReports() {
-    try {
-      const response = await this.request('/api/reports');
-      this.setData({
-        reports: response.reports || [],
-        isEmpty: !response.reports?.length
-      });
-    } catch (error) {
-      // 使用本地模拟数据
-      const localReports = wx.getStorageSync('reports') || [];
-      this.setData({
-        reports: localReports.length ? localReports : this.getMockReports(),
-        isEmpty: !localReports.length
-      });
-    }
+    // 直接使用本地数据，API端点暂未实现
+    const localReports = wx.getStorageSync('reports') || [];
+    this.setData({
+      reports: localReports.length ? localReports : this.getMockReports(),
+      isEmpty: !localReports.length
+    });
   },
 
   // 加载生词卡片
@@ -208,29 +201,6 @@ Page({
     const { id } = e.currentTarget.dataset;
     // 可以生成分享图片或跳转分享页
     wx.showToast({ title: '分享功能开发中', icon: 'none' });
-  },
-
-  // 网络请求
-  request(url, options = {}) {
-    return new Promise((resolve, reject) => {
-      wx.request({
-        url: `${app.globalData.baseUrl}${url}`,
-        method: options.method || 'GET',
-        data: options.data,
-        header: {
-          'Authorization': `Bearer ${app.globalData.sessionId}`,
-          'Content-Type': 'application/json'
-        },
-        success: (res) => {
-          if (res.statusCode >= 200 && res.statusCode < 300) {
-            resolve(res.data);
-          } else {
-            reject(new Error(res.data?.message || '请求失败'));
-          }
-        },
-        fail: reject
-      });
-    });
   },
 
   // 获取分数颜色
