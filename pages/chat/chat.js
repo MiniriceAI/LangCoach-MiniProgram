@@ -1,4 +1,5 @@
 const app = getApp();
+const { ScenarioUtils } = require('../../utils/scenarios');
 
 Page({
   data: {
@@ -96,10 +97,18 @@ Page({
   loadScenario() {
     const scenario = app.globalData.settings.scenario;
     const settings = app.globalData.settings;
+    
+    let scenarioTitle = '自由对话';
+    if (scenario && scenario.scenario) {
+      const scenarioData = ScenarioUtils.getScenario(scenario.scenario);
+      scenarioTitle = scenarioData ? scenarioData.title : scenario.title || '对话练习';
+    } else if (scenario && scenario.title) {
+      scenarioTitle = scenario.title;
+    }
 
     this.setData({
       scenario: scenario,
-      scenarioTitle: scenario ? scenario.title : '自由对话',
+      scenarioTitle: scenarioTitle,
       maxTurns: settings.turns,
       messages: [],
       currentTurn: 0,

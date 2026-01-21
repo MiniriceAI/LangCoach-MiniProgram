@@ -284,9 +284,6 @@
 }
 
 .scenario-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   padding: 24rpx 0;
   border-bottom: 1rpx solid var(--border-color);
 }
@@ -295,24 +292,42 @@
   border-bottom: none;
 }
 
+.scenario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
 .scenario-name {
   font-size: 28rpx;
+  font-weight: 500;
   color: var(--text-primary);
 }
 
-.scenario-right {
+.difficulty-badge {
+  color: white;
+  font-size: 20rpx;
+  font-weight: 500;
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
+}
+
+.scenario-desc {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 8rpx;
+}
+
+.scenario-meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
 }
 
-.scenario-difficulty {
-  font-size: 24rpx;
-  font-weight: 500;
-  margin-right: 12rpx;
-}
-
-.scenario-arrow {
-  font-size: 32rpx;
+.time-info {
+  font-size: 22rpx;
   color: var(--text-hint);
 }
 

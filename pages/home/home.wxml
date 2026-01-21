@@ -99,12 +99,15 @@
             data-scenario="{{scenario.id}}"
             bindtap="selectScenario"
           >
-            <text class="scenario-name">{{scenario.name}}</text>
-            <view class="scenario-right">
-              <view class="scenario-difficulty" style="color: {{scenario.difficulty === 'A1' || scenario.difficulty === 'A2' ? '#52C41A' : scenario.difficulty === 'B1' || scenario.difficulty === 'B2' ? '#FAAD14' : '#FF4D4F'}}">
+            <view class="scenario-header">
+              <text class="scenario-name">{{scenario.name}}</text>
+              <view class="difficulty-badge" style="background: {{scenario.difficulty === 'A1' || scenario.difficulty === 'A2' ? '#52C41A' : scenario.difficulty === 'B1' || scenario.difficulty === 'B2' ? '#FAAD14' : '#FF4D4F'}}">
                 {{scenario.difficulty}}
               </view>
-              <text class="scenario-arrow">›</text>
+            </view>
+            <text class="scenario-desc">{{scenario.description}}</text>
+            <view class="scenario-meta">
+              <text class="time-info">⏱️ 约{{scenario.estimatedTime}}分钟</text>
             </view>
           </view>
         </view>
