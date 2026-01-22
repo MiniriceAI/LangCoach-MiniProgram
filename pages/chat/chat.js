@@ -33,7 +33,11 @@ Page({
     // 当前显示的对话提示
     currentChatTips: null,
     // 是否显示对话提示
-    showChatTips: false
+    showChatTips: false,
+    // 流式输出相关
+    isStreaming: false,
+    streamingMessageId: null,
+    useStreamMode: true  // 是否使用流式模式
   },
 
   // 录音管理器
@@ -361,6 +365,119 @@ Page({
 
   // 发送到AI
   async sendToAI(text) {
+    if (this.data.useStreamMode) {
+      // 使用流式模式
+      await this.sendToAIStream(text);
+    } else {
+      // 使用传统模式
+      await this.sendToAITraditional(text);
+    }
+  },
+
+  // 流式发送到AI (优化延时)
+  async sendToAIStream(text) {
+    this.setData({ isStreaming: true, isLoading: true });
+
+    // 预先添加AI消息占位符
+    const aiMsgId = this.addMessage({
+      role: 'assistant',
+      content: '',
+      streaming: true,
+      hideText: this.data.learningMode === 'listening'
+    });
+
+    this.setData({ streamingMessageId: aiMsgId });
+
+    let fullReply = '';
+    let chatTips = null;
+
+    try {
+      await api.chat.messageStream(
+        {
+          session_id: this.data.sessionId,
+          message: text
+        },
+        {
+          onStart: (data) => {
+            console.log('[Stream] Started:', data);
+          },
+          onText: (data) => {
+            // 实时更新消息内容
+            fullReply += data.content;
+            if (this.data.learningMode !== 'listening') {
+              this.updateMessage(aiMsgId, {
+                content: fullReply,
+                streaming: true
+              });
+            }
+          },
+          onReplyComplete: (data) => {
+            console.log('[Stream] Reply complete:', data);
+            fullReply = data.reply;
+            chatTips = data.chat_tips;
+
+            // 更新消息为完整内容
+            this.updateMessage(aiMsgId, {
+              content: fullReply,
+              streaming: false,
+              chatTips: chatTips
+            });
+
+            // 开始异步加载音频
+            this.loadAudioAsync(aiMsgId);
+          },
+          onSessionStatus: (data) => {
+            console.log('[Stream] Session status:', data);
+            this.setData({
+              currentTurn: data.current_turn
+            });
+
+            if (data.session_ended) {
+              this.endSession(data.report);
+            }
+          },
+          onDone: (data) => {
+            console.log('[Stream] Done:', data);
+            this.setData({
+              isStreaming: false,
+              isLoading: false,
+              streamingMessageId: null,
+              currentTurn: this.data.currentTurn + 1
+            });
+          },
+          onError: (data) => {
+            console.error('[Stream] Error:', data);
+            this.updateMessage(aiMsgId, {
+              content: '[接收失败]',
+              streaming: false,
+              error: true
+            });
+            this.setData({
+              isStreaming: false,
+              isLoading: false,
+              streamingMessageId: null
+            });
+            wx.showToast({ title: '接收失败', icon: 'none' });
+          }
+        }
+      );
+    } catch (error) {
+      console.error('流式发送失败', error);
+      this.updateMessage(aiMsgId, {
+        content: '[发送失败]',
+        streaming: false,
+        error: true
+      });
+      this.setData({
+        isStreaming: false,
+        isLoading: false,
+        streamingMessageId: null
+      });
+    }
+  },
+
+  // 传统发送到AI (兼容模式)
+  async sendToAITraditional(text) {
     this.setData({ isLoading: true });
 
     try {
@@ -381,7 +498,6 @@ Page({
         audioUrl: response.audio_url,
         feedback: response.feedback,
         chatTips: response.chat_tips,
-        // 听力模式下隐藏文本
         hideText: this.data.learningMode === 'listening'
       });
 
@@ -389,7 +505,7 @@ Page({
       if (response.audio_url) {
         setTimeout(() => {
           this.autoPlayAudio(response.audio_url, aiMsgId, response.chat_tips);
-        }, 500); // 稍微延迟以确保渲染完成
+        }, 500);
       }
 
       // 检查是否结束
@@ -404,6 +520,55 @@ Page({
         role: 'assistant',
         content: "I understand. Could you tell me more about that?"
       });
+    }
+  },
+
+  // 异步加载音频
+  async loadAudioAsync(messageId) {
+    try {
+      console.log('[Audio] Loading audio for message:', messageId);
+
+      // 轮询获取音频URL
+      let attempts = 0;
+      const maxAttempts = 10;
+      const pollInterval = 500; // 500ms
+
+      const pollAudio = async () => {
+        attempts++;
+        try {
+          const result = await api.chat.getLatestAudio(this.data.sessionId);
+          if (result.audio_url) {
+            console.log('[Audio] Audio loaded:', result.audio_url);
+
+            // 更新消息的音频URL
+            this.updateMessage(messageId, {
+              audioUrl: result.audio_url
+            });
+
+            // 自动播放
+            setTimeout(() => {
+              this.autoPlayAudio(result.audio_url, messageId, null);
+            }, 300);
+
+            return true;
+          } else if (attempts < maxAttempts) {
+            // 继续轮询
+            setTimeout(pollAudio, pollInterval);
+          } else {
+            console.warn('[Audio] Audio loading timeout');
+          }
+        } catch (error) {
+          console.error('[Audio] Poll error:', error);
+          if (attempts < maxAttempts) {
+            setTimeout(pollAudio, pollInterval);
+          }
+        }
+      };
+
+      // 开始轮询
+      pollAudio();
+    } catch (error) {
+      console.error('[Audio] Load audio error:', error);
     }
   },
 

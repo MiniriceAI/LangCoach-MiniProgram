@@ -45,6 +45,7 @@
             error="{{item.error}}"
             playing="{{playingMessageId === item.id}}"
             hide-text="{{item.hideText}}"
+            streaming="{{item.streaming}}"
             bind:wordtap="onWordTap"
             bind:audiotap="onAudioTap"
           />
