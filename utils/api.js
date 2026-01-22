@@ -204,28 +204,31 @@ const api = {
 
         // 处理流式数据
         let buffer = '';
+        let currentEvent = null;
+
         requestTask.onChunkReceived((res) => {
           try {
-            const chunk = wx.arrayBufferToBase64(res.data);
-            const text = decodeURIComponent(escape(atob(chunk)));
+            // 正确解码 UTF-8 ArrayBuffer
+            const uint8Array = new Uint8Array(res.data);
+            const text = new TextDecoder('utf-8').decode(uint8Array);
             buffer += text;
 
             // 解析 SSE 事件
             const lines = buffer.split('\n');
             buffer = lines.pop() || ''; // 保留不完整的行
 
-            for (const line of lines) {
+            for (let i = 0; i < lines.length; i++) {
+              const line = lines[i];
               if (line.startsWith('event:')) {
-                const event = line.substring(6).trim();
-                const nextLine = lines[lines.indexOf(line) + 1];
-                if (nextLine && nextLine.startsWith('data:')) {
-                  const data = nextLine.substring(5).trim();
-                  try {
-                    const parsedData = JSON.parse(data);
-                    handleStreamEvent(event, parsedData, callbacks);
-                  } catch (e) {
-                    console.error('Parse SSE data error:', e);
-                  }
+                currentEvent = line.substring(6).trim();
+              } else if (line.startsWith('data:') && currentEvent) {
+                const data = line.substring(5).trim();
+                try {
+                  const parsedData = JSON.parse(data);
+                  handleStreamEvent(currentEvent, parsedData, callbacks);
+                  currentEvent = null; // 重置事件
+                } catch (e) {
+                  console.error('Parse SSE data error:', e, 'data:', data);
                 }
               }
             }
