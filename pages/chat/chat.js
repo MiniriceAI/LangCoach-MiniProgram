@@ -392,9 +392,12 @@ Page({
   // 播放音频
   onAudioTap(e) {
     const { audioUrl, playing } = e.detail;
-    const { id } = e.currentTarget.dataset;
     
-    if (playing) {
+    // 根据audioUrl找到对应的消息ID
+    const message = this.data.messages.find(msg => msg.audioUrl === audioUrl);
+    if (!message) return;
+    
+    if (playing || this.data.playingMessageId === message.id) {
       this.innerAudioContext.stop();
       this.setData({ playingMessageId: null });
     } else {
@@ -402,7 +405,7 @@ Page({
       const fullUrl = audioUrl.startsWith('http') ? audioUrl : `${app.globalData.baseUrl}${audioUrl}`;
       this.innerAudioContext.src = fullUrl;
       this.innerAudioContext.play();
-      this.setData({ playingMessageId: id });
+      this.setData({ playingMessageId: message.id });
     }
   },
 

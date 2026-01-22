@@ -66,53 +66,6 @@
         </view>
       </view>
     </view>
-            <view class="wave"></view>
-          </view>
-        </view>
-
-        <!-- 文本消息 -->
-        <view class="bubble" wx:else>
-          <chat-bubble
-            content="{{item.content}}"
-            role="{{item.role}}"
-            bind:wordtap="onWordTap"
-          />
-        </view>
-
-        <!-- 转写文本 -->
-        <view class="transcription" wx:if="{{item.type === 'voice' && item.content}}">
-          <text wx:if="{{item.transcribing}}">识别中...</text>
-          <text wx:else>{{item.content}}</text>
-        </view>
-
-        <!-- 语法反馈 -->
-        <view class="grammar-feedback" wx:if="{{item.feedback}}">
-          <text class="feedback-title">💡 语法提示</text>
-          <text class="feedback-text">{{item.feedback}}</text>
-        </view>
-
-        <!-- 消息时间 -->
-        <view class="message-time">
-          {{item.timestamp ? (item.timestamp | formatTime) : ''}}
-        </view>
-
-        <!-- AI消息反馈按钮 -->
-        <view class="feedback-actions" wx:if="{{item.role === 'assistant'}}">
-          <view
-            class="feedback-btn {{item.userFeedback === 'up' ? 'active' : ''}}"
-            data-id="{{item.id}}"
-            data-type="up"
-            bindtap="onFeedback"
-          >👍</view>
-          <view
-            class="feedback-btn {{item.userFeedback === 'down' ? 'active' : ''}}"
-            data-id="{{item.id}}"
-            data-type="down"
-            bindtap="onFeedback"
-          >👎</view>
-        </view>
-      </view>
-    </view>
 
     <!-- 加载状态 -->
     <view class="message-item assistant" wx:if="{{isLoading}}">
