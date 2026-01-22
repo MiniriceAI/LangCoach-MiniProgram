@@ -396,7 +396,9 @@ Page({
       this.innerAudioContext.stop();
       this.setData({ playingMessageId: null });
     } else {
-      this.innerAudioContext.src = url;
+      // 确保使用完整的URL
+      const fullUrl = url.startsWith('http') ? url : `${app.globalData.baseUrl}${url}`;
+      this.innerAudioContext.src = fullUrl;
       this.innerAudioContext.play();
       this.setData({ playingMessageId: id });
     }
