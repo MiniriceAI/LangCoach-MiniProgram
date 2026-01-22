@@ -31,6 +31,10 @@ Component({
     playing: {
       type: Boolean,
       value: false
+    },
+    hideText: {
+      type: Boolean,
+      value: false
     }
   },
 
@@ -42,6 +46,8 @@ Component({
     'content': function(content) {
       if (content) {
         this.parseContent(content);
+      } else {
+        this.setData({ words: [] });
       }
     }
   },

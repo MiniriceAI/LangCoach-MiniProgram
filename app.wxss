@@ -10,12 +10,13 @@ page {
 
 /* 主题色变量 */
 page {
-  --primary-color: #4A90D9;
-  --primary-light: #E8F1FB;
-  --primary-dark: #3A7BC8;
-  --success-color: #52C41A;
-  --warning-color: #FAAD14;
-  --error-color: #FF4D4F;
+  --primary-color: #6366f1;
+  --primary-light: #e0e7ff;
+  --primary-dark: #4f46e5;
+  --secondary-color: #8b5cf6;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
   --text-primary: #333333;
   --text-secondary: #666666;
   --text-hint: #999999;
@@ -23,6 +24,11 @@ page {
   --bg-color: #F5F7FA;
   --card-bg: #FFFFFF;
   --shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
+  /* 深色主题变量 */
+  --dark-bg: linear-gradient(180deg, #1a1a3e 0%, #2d2d5a 50%, #3d3d7a 100%);
+  --dark-card-bg: rgba(255, 255, 255, 0.1);
+  --dark-text: #FFFFFF;
+  --dark-text-secondary: rgba(255, 255, 255, 0.7);
 }
 
 /* 通用容器 */
@@ -43,7 +49,7 @@ page {
 
 /* 按钮样式 */
 .btn-primary {
-  background: linear-gradient(135deg, #4A90D9 0%, #3A7BC8 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #FFFFFF;
   border: none;
   border-radius: 48rpx;
@@ -140,7 +146,7 @@ page {
   width: 16rpx;
   height: 16rpx;
   border-radius: 50%;
-  background: var(--primary-color);
+  background: #8b5cf6;
   margin: 0 8rpx;
   animation: bounce 1.4s infinite ease-in-out both;
 }

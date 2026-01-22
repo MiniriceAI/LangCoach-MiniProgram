@@ -27,7 +27,13 @@ Page({
     // 滚动
     scrollToMessage: '',
     // 键盘高度
-    keyboardHeight: 0
+    keyboardHeight: 0,
+    // 学习模式: prompt(提示模式) | listening(听力模式)
+    learningMode: 'prompt',
+    // 当前显示的对话提示
+    currentChatTips: null,
+    // 是否显示对话提示
+    showChatTips: false
   },
 
   // 录音管理器
@@ -85,14 +91,20 @@ Page({
   // 初始化音频播放器
   initAudioPlayer() {
     this.innerAudioContext = wx.createInnerAudioContext();
-    
+
     this.innerAudioContext.onEnded(() => {
       if (this.data.playingMessageId) {
         this.updateMessagePlayingState(this.data.playingMessageId, false);
         this.setData({ playingMessageId: null });
       }
+      // 播放结束后，如果是提示模式且有待显示的对话提示，则显示
+      if (this._pendingChatTips && this.data.learningMode === 'prompt') {
+        this.showChatTipsForMessage(this._pendingMessageId, this._pendingChatTips);
+        this._pendingChatTips = null;
+        this._pendingMessageId = null;
+      }
     });
-    
+
     this.innerAudioContext.onError((err) => {
       console.error('播放错误', err);
       if (this.data.playingMessageId) {
@@ -101,7 +113,7 @@ Page({
       }
       wx.showToast({ title: '播放失败', icon: 'none' });
     });
-    
+
     this.innerAudioContext.onStop(() => {
       if (this.data.playingMessageId) {
         this.updateMessagePlayingState(this.data.playingMessageId, false);
@@ -367,13 +379,16 @@ Page({
         role: 'assistant',
         content: response.reply,
         audioUrl: response.audio_url,
-        feedback: response.feedback
+        feedback: response.feedback,
+        chatTips: response.chat_tips,
+        // 听力模式下隐藏文本
+        hideText: this.data.learningMode === 'listening'
       });
 
       // 自动播放AI语音回复
       if (response.audio_url) {
         setTimeout(() => {
-          this.autoPlayAudio(response.audio_url, aiMsgId);
+          this.autoPlayAudio(response.audio_url, aiMsgId, response.chat_tips);
         }, 500); // 稍微延迟以确保渲染完成
       }
 
@@ -461,9 +476,14 @@ Page({
   },
 
   // 自动播放AI回复音频
-  autoPlayAudio(audioUrl, messageId) {
+  autoPlayAudio(audioUrl, messageId, chatTips) {
     if (audioUrl) {
       this.playAudio(audioUrl, messageId);
+      // 如果是提示模式且有对话提示，在播放完成后显示
+      if (this.data.learningMode === 'prompt' && chatTips) {
+        this._pendingChatTips = chatTips;
+        this._pendingMessageId = messageId;
+      }
     }
   },
 
@@ -607,5 +627,70 @@ Page({
     // 更新本地状态
     this.updateMessage(id, { userFeedback: type });
     wx.showToast({ title: '感谢反馈', icon: 'none' });
+  },
+
+  // 切换学习模式
+  switchLearningMode(e) {
+    const mode = e.currentTarget.dataset.mode;
+    if (mode === this.data.learningMode) return;
+
+    this.setData({
+      learningMode: mode,
+      showChatTips: false,
+      currentChatTips: null
+    });
+
+    // 更新所有消息的显示状态
+    const messages = this.data.messages.map(msg => {
+      if (msg.role === 'assistant') {
+        return {
+          ...msg,
+          hideText: mode === 'listening',
+          showTips: false
+        };
+      }
+      return msg;
+    });
+    this.setData({ messages });
+
+    wx.showToast({
+      title: mode === 'prompt' ? '提示模式' : '听力模式',
+      icon: 'none'
+    });
+  },
+
+  // 显示对话提示
+  showChatTipsForMessage(messageId, chatTips) {
+    if (!chatTips) return;
+
+    // 更新消息的showTips状态
+    const messages = this.data.messages.map(msg => {
+      if (msg.id === messageId) {
+        return { ...msg, showTips: true };
+      }
+      return msg;
+    });
+
+    this.setData({
+      messages,
+      currentChatTips: chatTips,
+      showChatTips: true
+    });
+  },
+
+  // 隐藏对话提示
+  hideChatTips() {
+    this.setData({
+      showChatTips: false,
+      currentChatTips: null
+    });
+  },
+
+  // 重新播放消息音频
+  replayAudio(e) {
+    const { id, audioUrl } = e.currentTarget.dataset;
+    if (audioUrl) {
+      this.playAudio(audioUrl, id);
+    }
   }
 });

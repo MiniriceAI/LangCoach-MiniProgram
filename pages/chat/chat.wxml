@@ -37,20 +37,32 @@
         <view class="bubble {{item.role === 'user' ? 'user-bubble' : 'assistant-bubble'}}">
           <chat-bubble
             id="bubble-{{index}}"
-            content="{{item.content}}"
+            content="{{item.hideText ? '' : item.content}}"
             role="{{item.role}}"
             audio-url="{{item.audioUrl}}"
             duration="{{item.duration}}"
             transcribing="{{item.transcribing}}"
             error="{{item.error}}"
             playing="{{playingMessageId === item.id}}"
+            hide-text="{{item.hideText}}"
             bind:wordtap="onWordTap"
             bind:audiotap="onAudioTap"
           />
         </view>
-        
-        <!-- 反馈按钮 (只对AI消息显示) -->
-        <view class="feedback-buttons" wx:if="{{item.role === 'assistant' && item.content && !item.transcribing}}">
+
+        <!-- AI消息的操作按钮 -->
+        <view class="message-actions" wx:if="{{item.role === 'assistant' && item.content && !item.transcribing}}">
+          <!-- 重新播放按钮 -->
+          <view
+            class="action-btn replay-btn"
+            wx:if="{{item.audioUrl}}"
+            data-id="{{item.id}}"
+            data-audio-url="{{item.audioUrl}}"
+            bindtap="replayAudio"
+          >
+            <text class="action-icon">🔊</text>
+          </view>
+          <!-- 反馈按钮 -->
           <text
             class="feedback-btn {{item.userFeedback === 'like' ? 'active' : ''}}"
             data-id="{{item.id}}"
@@ -63,6 +75,18 @@
             data-type="dislike"
             bindtap="onFeedback"
           >👎</text>
+        </view>
+
+        <!-- 对话提示 (提示模式下显示) -->
+        <view class="chat-tips-card" wx:if="{{item.role === 'assistant' && item.showTips && item.chatTips && learningMode === 'prompt'}}">
+          <view class="tips-header">
+            <text class="tips-label">对话提示</text>
+            <text class="tips-icon">💡</text>
+          </view>
+          <view class="tips-content">
+            <text class="tips-english">{{item.chatTips.english}}</text>
+            <text class="tips-chinese">{{item.chatTips.chinese}}</text>
+          </view>
         </view>
       </view>
     </view>
@@ -81,6 +105,26 @@
       </view>
     </view>
   </scroll-view>
+
+  <!-- 学习模式切换 -->
+  <view class="mode-selector">
+    <view
+      class="mode-btn {{learningMode === 'prompt' ? 'active' : ''}}"
+      data-mode="prompt"
+      bindtap="switchLearningMode"
+    >
+      <text class="mode-icon">📝</text>
+      <text class="mode-text">提示模式</text>
+    </view>
+    <view
+      class="mode-btn {{learningMode === 'listening' ? 'active' : ''}}"
+      data-mode="listening"
+      bindtap="switchLearningMode"
+    >
+      <text class="mode-icon">🎧</text>
+      <text class="mode-text">听力模式</text>
+    </view>
+  </view>
 
   <!-- 底部输入区域 -->
   <view class="input-area" style="padding-bottom: {{keyboardHeight > 0 ? keyboardHeight + 'px' : 'calc(20rpx + env(safe-area-inset-bottom))'}}">

@@ -4,7 +4,7 @@
     <view class="voice-icon">
       <text wx:if="{{transcribing}}" class="loading">转写中...</text>
       <text wx:elif="{{error}}" class="error">❌</text>
-      <text wx:else class="audio-icon {{playing ? 'playing' : ''}}">🎵</text>
+      <text wx:else class="audio-icon {{playing ? 'playing' : ''}}">{{playing ? '🔊' : '🎵'}}</text>
     </view>
     <text class="duration">{{duration || 0}}"</text>
     <view wx:if="{{role === 'user'}}" class="voice-indicator">
@@ -15,9 +15,14 @@
       </text>
     </view>
   </view>
-  
-  <!-- 文本内容 - 语音转文字或直接文本输入 -->
-  <view wx:if="{{content && !transcribing}}" class="text-content">
+
+  <!-- 听力模式下只显示语音框，不显示文本 -->
+  <view wx:if="{{hideText && audioUrl}}" class="listening-mode-hint">
+    <text class="hint-text">{{playing ? '正在播放...' : '点击播放'}}</text>
+  </view>
+
+  <!-- 文本内容 - 语音转文字或直接文本输入 (非听力模式) -->
+  <view wx:elif="{{content && !transcribing && !hideText}}" class="text-content">
     <text
       class="word {{role === 'assistant' ? 'clickable' : ''}}"
       wx:for="{{words}}"

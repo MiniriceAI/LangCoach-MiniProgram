@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: var(--bg-color);
+  background: linear-gradient(180deg, #1a1a3e 0%, #2d2d5a 50%, #3d3d7a 100%);
 }
 
 /* 顶部场景信息 */
@@ -11,8 +11,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 20rpx 30rpx;
-  background: var(--card-bg);
-  border-bottom: 1rpx solid var(--border-color);
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.1);
 }
 
 .scenario-info {
@@ -23,13 +23,13 @@
 .scenario-title {
   font-size: 30rpx;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #FFFFFF;
 }
 
 .turn-counter {
   font-size: 24rpx;
-  color: var(--text-hint);
-  background: var(--bg-color);
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.1);
   padding: 6rpx 16rpx;
   border-radius: 20rpx;
 }
@@ -72,14 +72,14 @@
 }
 
 .message-item.assistant .bubble {
-  background: var(--card-bg);
-  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
   border-top-left-radius: 8rpx;
-  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
 }
 
 .message-item.user .bubble {
-  background: linear-gradient(135deg, #4A90D9 0%, #3A7BC8 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #FFFFFF;
   border-top-right-radius: 8rpx;
 }
@@ -194,19 +194,19 @@
   display: flex;
   align-items: center;
   padding: 24rpx;
-  background: var(--card-bg);
+  background: rgba(255, 255, 255, 0.15);
   border-radius: 24rpx;
   border-top-left-radius: 8rpx;
-  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
 }
 
 /* 底部输入区域 */
 .input-area {
-  background: var(--card-bg);
+  background: rgba(255, 255, 255, 0.1);
   padding: 20rpx 30rpx;
   padding-bottom: calc(20rpx + constant(safe-area-inset-bottom));
   padding-bottom: calc(20rpx + env(safe-area-inset-bottom));
-  border-top: 1rpx solid var(--border-color);
+  border-top: 1rpx solid rgba(255, 255, 255, 0.1);
 }
 
 .input-wrapper {
@@ -228,7 +228,7 @@
   flex: 1;
   display: flex;
   align-items: center;
-  background: var(--bg-color);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 40rpx;
   padding: 0 30rpx;
   margin: 0 16rpx;
@@ -238,6 +238,11 @@
   flex: 1;
   height: 80rpx;
   font-size: 30rpx;
+  color: #FFFFFF;
+}
+
+.text-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .send-btn {
@@ -246,13 +251,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--primary-color);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .send-btn.disabled {
-  background: var(--border-color);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .send-icon {
@@ -271,15 +276,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-color);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   border-radius: 40rpx;
   font-size: 30rpx;
-  color: var(--text-secondary);
+  color: #FFFFFF;
 }
 
 .voice-btn.recording {
-  background: #FFEBEE;
-  color: #FF4D4F;
+  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  color: #FFFFFF;
 }
 
 /* 录音状态提示 */
@@ -369,12 +374,151 @@
 .empty-title {
   font-size: 36rpx;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #FFFFFF;
   margin-bottom: 16rpx;
 }
 
 .empty-desc {
   font-size: 28rpx;
-  color: var(--text-hint);
+  color: rgba(255, 255, 255, 0.6);
   text-align: center;
+}
+
+/* 学习模式切换 */
+.mode-selector {
+  display: flex;
+  justify-content: center;
+  padding: 16rpx 30rpx;
+  gap: 20rpx;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.mode-btn {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 24rpx;
+  border-radius: 30rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1rpx solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s;
+}
+
+.mode-btn.active {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-color: transparent;
+}
+
+.mode-icon {
+  font-size: 28rpx;
+  margin-right: 8rpx;
+}
+
+.mode-text {
+  font-size: 26rpx;
+  color: #FFFFFF;
+}
+
+/* 消息操作按钮 */
+.message-actions {
+  display: flex;
+  align-items: center;
+  margin-top: 12rpx;
+  gap: 16rpx;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.action-icon {
+  font-size: 28rpx;
+}
+
+.replay-btn:active {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 反馈按钮 */
+.feedback-btn {
+  padding: 8rpx 16rpx;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16rpx;
+}
+
+.feedback-btn.active {
+  color: #FFFFFF;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+/* 对话提示卡片 */
+.chat-tips-card {
+  margin-top: 16rpx;
+  padding: 20rpx;
+  background: rgba(99, 102, 241, 0.2);
+  border-radius: 16rpx;
+  border-left: 4rpx solid #8b5cf6;
+}
+
+.tips-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.tips-label {
+  font-size: 24rpx;
+  color: #a5b4fc;
+  font-weight: 500;
+}
+
+.tips-icon {
+  margin-left: 8rpx;
+  font-size: 24rpx;
+}
+
+.tips-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.tips-english {
+  font-size: 28rpx;
+  color: #FFFFFF;
+  line-height: 1.5;
+}
+
+.tips-chinese {
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.5;
+}
+
+/* 听力模式下的语音框样式 */
+.listening-mode-audio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 30rpx;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 20rpx;
+  min-height: 100rpx;
+}
+
+.audio-wave-icon {
+  font-size: 48rpx;
+  margin-right: 16rpx;
+}
+
+.audio-status-text {
+  font-size: 28rpx;
+  color: rgba(255, 255, 255, 0.8);
 }
