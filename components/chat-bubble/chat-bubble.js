@@ -62,12 +62,20 @@ Component({
     },
 
     onAudioTap() {
-      if (this.properties.audioUrl && !this.properties.transcribing) {
+      if (this.properties.audioUrl && !this.properties.transcribing && !this.properties.error) {
         this.triggerEvent('audiotap', {
           audioUrl: this.properties.audioUrl,
-          playing: this.properties.playing
+          playing: this.properties.playing,
+          role: this.properties.role
         });
       }
+    },
+
+    // 设置播放状态
+    setPlayingState(playing) {
+      this.setData({
+        playing: playing
+      });
     }
   }
 });

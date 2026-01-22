@@ -8,19 +8,32 @@
 .voice-message {
   display: flex;
   align-items: center;
-  padding: 16rpx;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 16rpx;
-  margin-bottom: 16rpx;
+  padding: 16rpx 20rpx;
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 20rpx;
+  margin-bottom: 12rpx;
   min-width: 200rpx;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.bubble-content.user .voice-message {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .voice-icon {
   margin-right: 16rpx;
+  display: flex;
+  align-items: center;
 }
 
 .audio-icon {
   font-size: 32rpx;
+  color: #4A90D9;
+}
+
+.bubble-content.user .audio-icon {
+  color: #FFFFFF;
 }
 
 .audio-icon.playing {
@@ -39,11 +52,68 @@
 
 .error {
   font-size: 24rpx;
+  color: #ff4d4f;
 }
 
 .duration {
   font-size: 24rpx;
   color: #666;
+  margin-left: auto;
+}
+
+.bubble-content.user .duration {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* 语音波形指示器 (用户消息) */
+.voice-indicator {
+  margin-left: auto;
+}
+
+.voice-bars {
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.bar {
+  width: 6rpx;
+  height: 20rpx;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 3rpx;
+  display: inline-block;
+}
+
+.voice-bars.playing .bar {
+  animation: wave 1.5s infinite;
+}
+
+.voice-bars.playing .bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.voice-bars.playing .bar:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.voice-bars.playing .bar:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+@keyframes wave {
+  0%, 100% { height: 20rpx; }
+  50% { height: 40rpx; }
+}
+
+/* 转写提示 */
+.transcribing-hint {
+  padding: 8rpx 0;
+  opacity: 0.7;
+}
+
+.loading-text {
+  font-size: 24rpx;
+  color: #999;
 }
 
 /* 文本内容样式 */

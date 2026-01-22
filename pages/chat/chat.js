@@ -85,12 +85,28 @@ Page({
   // 初始化音频播放器
   initAudioPlayer() {
     this.innerAudioContext = wx.createInnerAudioContext();
+    
     this.innerAudioContext.onEnded(() => {
-      this.setData({ playingMessageId: null });
+      if (this.data.playingMessageId) {
+        this.updateMessagePlayingState(this.data.playingMessageId, false);
+        this.setData({ playingMessageId: null });
+      }
     });
+    
     this.innerAudioContext.onError((err) => {
       console.error('播放错误', err);
-      this.setData({ playingMessageId: null });
+      if (this.data.playingMessageId) {
+        this.updateMessagePlayingState(this.data.playingMessageId, false);
+        this.setData({ playingMessageId: null });
+      }
+      wx.showToast({ title: '播放失败', icon: 'none' });
+    });
+    
+    this.innerAudioContext.onStop(() => {
+      if (this.data.playingMessageId) {
+        this.updateMessagePlayingState(this.data.playingMessageId, false);
+        this.setData({ playingMessageId: null });
+      }
     });
   },
 
@@ -146,11 +162,18 @@ Page({
 
       // 添加AI开场白
       if (response.greeting) {
-        this.addMessage({
+        const greetingMsgId = this.addMessage({
           role: 'assistant',
           content: response.greeting,
           audioUrl: response.audio_url
         });
+        
+        // 自动播放开场白语音
+        if (response.audio_url) {
+          setTimeout(() => {
+            this.autoPlayAudio(response.audio_url, greetingMsgId);
+          }, 1000); // 给页面一些时间渲染
+        }
       }
     } catch (error) {
       console.error('开始会话失败', error);
@@ -252,7 +275,6 @@ Page({
     // 先添加用户语音消息（显示加载状态）
     const userMsgId = this.addMessage({
       role: 'user',
-      type: 'voice',
       audioUrl: filePath,
       duration: Math.ceil(duration / 1000),
       transcribing: true
@@ -341,12 +363,19 @@ Page({
       });
 
       // 添加AI回复
-      this.addMessage({
+      const aiMsgId = this.addMessage({
         role: 'assistant',
         content: response.reply,
         audioUrl: response.audio_url,
         feedback: response.feedback
       });
+
+      // 自动播放AI语音回复
+      if (response.audio_url) {
+        setTimeout(() => {
+          this.autoPlayAudio(response.audio_url, aiMsgId);
+        }, 500); // 稍微延迟以确保渲染完成
+      }
 
       // 检查是否结束
       if (response.session_ended || this.data.currentTurn >= this.data.maxTurns) {
@@ -391,36 +420,73 @@ Page({
 
   // 播放音频
   onAudioTap(e) {
-    const { audioUrl, playing } = e.detail;
+    const { audioUrl, playing, role } = e.detail;
     
     // 根据audioUrl找到对应的消息ID
     const message = this.data.messages.find(msg => msg.audioUrl === audioUrl);
     if (!message) return;
     
     if (playing || this.data.playingMessageId === message.id) {
-      this.innerAudioContext.stop();
-      this.setData({ playingMessageId: null });
+      // 停止播放
+      this.stopAudio();
     } else {
-      // 确保使用完整的URL
-      const fullUrl = audioUrl.startsWith('http') ? audioUrl : `${app.globalData.baseUrl}${audioUrl}`;
-      this.innerAudioContext.src = fullUrl;
-      this.innerAudioContext.play();
-      this.setData({ playingMessageId: message.id });
+      // 开始播放
+      this.playAudio(audioUrl, message.id);
+    }
+  },
+
+  // 播放音频
+  playAudio(audioUrl, messageId) {
+    // 停止当前播放
+    this.stopAudio();
+    
+    // 确保使用完整的URL
+    const fullUrl = audioUrl.startsWith('http') ? audioUrl : `${app.globalData.baseUrl}${audioUrl}`;
+    
+    this.innerAudioContext.src = fullUrl;
+    this.innerAudioContext.play();
+    this.setData({ playingMessageId: messageId });
+    
+    // 更新对应组件的播放状态
+    this.updateMessagePlayingState(messageId, true);
+  },
+
+  // 停止音频播放
+  stopAudio() {
+    if (this.data.playingMessageId) {
+      this.innerAudioContext.stop();
+      this.updateMessagePlayingState(this.data.playingMessageId, false);
+      this.setData({ playingMessageId: null });
+    }
+  },
+
+  // 自动播放AI回复音频
+  autoPlayAudio(audioUrl, messageId) {
+    if (audioUrl) {
+      this.playAudio(audioUrl, messageId);
+    }
+  },
+
+  // 更新消息的播放状态
+  updateMessagePlayingState(messageId, playing) {
+    // 通过selectComponent更新对应组件的状态
+    const messages = this.data.messages;
+    const messageIndex = messages.findIndex(msg => msg.id === messageId);
+    if (messageIndex !== -1) {
+      const component = this.selectComponent(`#bubble-${messageIndex}`);
+      if (component && component.setPlayingState) {
+        component.setPlayingState(playing);
+      }
     }
   },
 
   // 播放音频 (兼容旧方法)
-  playAudio(e) {
+  playAudioOld(e) {
     const { id, url } = e.currentTarget.dataset;
     if (this.data.playingMessageId === id) {
-      this.innerAudioContext.stop();
-      this.setData({ playingMessageId: null });
+      this.stopAudio();
     } else {
-      // 确保使用完整的URL
-      const fullUrl = url.startsWith('http') ? url : `${app.globalData.baseUrl}${url}`;
-      this.innerAudioContext.src = fullUrl;
-      this.innerAudioContext.play();
-      this.setData({ playingMessageId: id });
+      this.playAudio(url, id);
     }
   },
 

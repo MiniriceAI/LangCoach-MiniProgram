@@ -36,9 +36,9 @@
       <view class="message-content">
         <view class="bubble {{item.role === 'user' ? 'user-bubble' : 'assistant-bubble'}}">
           <chat-bubble
+            id="bubble-{{index}}"
             content="{{item.content}}"
             role="{{item.role}}"
-            type="{{item.type || 'text'}}"
             audio-url="{{item.audioUrl}}"
             duration="{{item.duration}}"
             transcribing="{{item.transcribing}}"

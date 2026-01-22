@@ -1,15 +1,22 @@
 <view class="bubble-content {{role}}">
-  <!-- 语音消息 -->
-  <view wx:if="{{type === 'voice' && audioUrl}}" class="voice-message" bindtap="onAudioTap">
+  <!-- 语音消息控件 - 当有音频URL时显示 -->
+  <view wx:if="{{audioUrl}}" class="voice-message" bindtap="onAudioTap">
     <view class="voice-icon">
       <text wx:if="{{transcribing}}" class="loading">转写中...</text>
       <text wx:elif="{{error}}" class="error">❌</text>
       <text wx:else class="audio-icon {{playing ? 'playing' : ''}}">🎵</text>
     </view>
-    <text class="duration">{{duration}}"</text>
+    <text class="duration">{{duration || 0}}"</text>
+    <view wx:if="{{role === 'user'}}" class="voice-indicator">
+      <text class="voice-bars {{playing ? 'playing' : ''}}">
+        <text class="bar"></text>
+        <text class="bar"></text>
+        <text class="bar"></text>
+      </text>
+    </view>
   </view>
   
-  <!-- 文本内容 -->
+  <!-- 文本内容 - 语音转文字或直接文本输入 -->
   <view wx:if="{{content && !transcribing}}" class="text-content">
     <text
       class="word {{role === 'assistant' ? 'clickable' : ''}}"
@@ -18,5 +25,10 @@
       data-word="{{item}}"
       bindtap="onWordTap"
     >{{item}}</text>
+  </view>
+
+  <!-- 转写中的提示 -->
+  <view wx:if="{{transcribing}}" class="transcribing-hint">
+    <text class="loading-text">正在转写语音...</text>
   </view>
 </view>
