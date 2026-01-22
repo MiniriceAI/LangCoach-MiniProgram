@@ -390,6 +390,23 @@ Page({
   },
 
   // 播放音频
+  onAudioTap(e) {
+    const { audioUrl, playing } = e.detail;
+    const { id } = e.currentTarget.dataset;
+    
+    if (playing) {
+      this.innerAudioContext.stop();
+      this.setData({ playingMessageId: null });
+    } else {
+      // 确保使用完整的URL
+      const fullUrl = audioUrl.startsWith('http') ? audioUrl : `${app.globalData.baseUrl}${audioUrl}`;
+      this.innerAudioContext.src = fullUrl;
+      this.innerAudioContext.play();
+      this.setData({ playingMessageId: id });
+    }
+  },
+
+  // 播放音频 (兼容旧方法)
   playAudio(e) {
     const { id, url } = e.currentTarget.dataset;
     if (this.data.playingMessageId === id) {

@@ -1,6 +1,54 @@
 .bubble-content {
-  display: inline;
+  display: inline-block;
   line-height: 1.6;
+  width: 100%;
+}
+
+/* 语音消息样式 */
+.voice-message {
+  display: flex;
+  align-items: center;
+  padding: 16rpx;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 16rpx;
+  margin-bottom: 16rpx;
+  min-width: 200rpx;
+}
+
+.voice-icon {
+  margin-right: 16rpx;
+}
+
+.audio-icon {
+  font-size: 32rpx;
+}
+
+.audio-icon.playing {
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.error {
+  font-size: 24rpx;
+}
+
+.duration {
+  font-size: 24rpx;
+  color: #666;
+}
+
+/* 文本内容样式 */
+.text-content {
+  display: inline;
 }
 
 .word {
@@ -14,6 +62,10 @@
 
 .bubble-content.user .word {
   color: #FFFFFF;
+}
+
+.bubble-content.user .voice-message {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .bubble-content.assistant .word {

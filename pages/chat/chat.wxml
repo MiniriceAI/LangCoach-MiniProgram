@@ -34,20 +34,38 @@
         mode="aspectFill"
       />
       <view class="message-content">
-        <!-- 语音消息 -->
-        <view
-          class="bubble voice-bubble"
-          wx:if="{{item.type === 'voice'}}"
-          data-id="{{item.id}}"
-          data-url="{{item.audioUrl}}"
-          bindtap="playAudio"
-        >
-          <text class="voice-icon">🎤</text>
-          <text class="voice-duration">{{item.duration}}"</text>
-          <view class="voice-waves" wx:if="{{playingMessageId === item.id}}">
-            <view class="wave"></view>
-            <view class="wave"></view>
-            <view class="wave"></view>
+        <view class="bubble {{item.role === 'user' ? 'user-bubble' : 'assistant-bubble'}}">
+          <chat-bubble
+            content="{{item.content}}"
+            role="{{item.role}}"
+            type="{{item.type || 'text'}}"
+            audio-url="{{item.audioUrl}}"
+            duration="{{item.duration}}"
+            transcribing="{{item.transcribing}}"
+            error="{{item.error}}"
+            playing="{{playingMessageId === item.id}}"
+            bind:wordtap="onWordTap"
+            bind:audiotap="onAudioTap"
+          />
+        </view>
+        
+        <!-- 反馈按钮 (只对AI消息显示) -->
+        <view class="feedback-buttons" wx:if="{{item.role === 'assistant' && item.content && !item.transcribing}}">
+          <text
+            class="feedback-btn {{item.userFeedback === 'like' ? 'active' : ''}}"
+            data-id="{{item.id}}"
+            data-type="like"
+            bindtap="onFeedback"
+          >👍</text>
+          <text
+            class="feedback-btn {{item.userFeedback === 'dislike' ? 'active' : ''}}"
+            data-id="{{item.id}}"
+            data-type="dislike"
+            bindtap="onFeedback"
+          >👎</text>
+        </view>
+      </view>
+    </view>
             <view class="wave"></view>
           </view>
         </view>

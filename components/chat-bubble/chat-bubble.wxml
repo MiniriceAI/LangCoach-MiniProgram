@@ -1,9 +1,22 @@
 <view class="bubble-content {{role}}">
-  <text
-    class="word {{role === 'assistant' ? 'clickable' : ''}}"
-    wx:for="{{words}}"
-    wx:key="index"
-    data-word="{{item}}"
-    bindtap="onWordTap"
-  >{{item}}</text>
+  <!-- 语音消息 -->
+  <view wx:if="{{type === 'voice' && audioUrl}}" class="voice-message" bindtap="onAudioTap">
+    <view class="voice-icon">
+      <text wx:if="{{transcribing}}" class="loading">转写中...</text>
+      <text wx:elif="{{error}}" class="error">❌</text>
+      <text wx:else class="audio-icon {{playing ? 'playing' : ''}}">🎵</text>
+    </view>
+    <text class="duration">{{duration}}"</text>
+  </view>
+  
+  <!-- 文本内容 -->
+  <view wx:if="{{content && !transcribing}}" class="text-content">
+    <text
+      class="word {{role === 'assistant' ? 'clickable' : ''}}"
+      wx:for="{{words}}"
+      wx:key="index"
+      data-word="{{item}}"
+      bindtap="onWordTap"
+    >{{item}}</text>
+  </view>
 </view>

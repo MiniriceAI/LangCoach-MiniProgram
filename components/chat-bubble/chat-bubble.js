@@ -7,6 +7,30 @@ Component({
     role: {
       type: String,
       value: 'assistant' // assistant | user
+    },
+    type: {
+      type: String,
+      value: 'text' // text | voice
+    },
+    audioUrl: {
+      type: String,
+      value: ''
+    },
+    duration: {
+      type: Number,
+      value: 0
+    },
+    transcribing: {
+      type: Boolean,
+      value: false
+    },
+    error: {
+      type: Boolean,
+      value: false
+    },
+    playing: {
+      type: Boolean,
+      value: false
     }
   },
 
@@ -34,6 +58,15 @@ Component({
       // 只对英文单词触发事件
       if (/^[a-zA-Z]+$/.test(word) && word.length > 1) {
         this.triggerEvent('wordtap', { word: word.toLowerCase() });
+      }
+    },
+
+    onAudioTap() {
+      if (this.properties.audioUrl && !this.properties.transcribing) {
+        this.triggerEvent('audiotap', {
+          audioUrl: this.properties.audioUrl,
+          playing: this.properties.playing
+        });
       }
     }
   }
