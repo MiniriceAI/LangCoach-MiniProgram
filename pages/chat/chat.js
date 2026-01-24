@@ -376,7 +376,7 @@ Page({
 
   // 流式发送到AI (优化延时)
   async sendToAIStream(text) {
-    this.setData({ isStreaming: true });
+    this.setData({ isStreaming: true, isLoading: true });
 
     // 预先添加AI消息占位符
     const aiMsgId = this.addMessage({
@@ -440,6 +440,7 @@ Page({
             console.log('[Stream] Done:', data);
             this.setData({
               isStreaming: false,
+              isLoading: false,
               streamingMessageId: null,
               currentTurn: this.data.currentTurn + 1
             });
@@ -453,6 +454,7 @@ Page({
             });
             this.setData({
               isStreaming: false,
+              isLoading: false,
               streamingMessageId: null
             });
             wx.showToast({ title: '接收失败', icon: 'none' });
@@ -468,6 +470,7 @@ Page({
       });
       this.setData({
         isStreaming: false,
+        isLoading: false,
         streamingMessageId: null
       });
     }
@@ -525,10 +528,6 @@ Page({
     try {
       console.log('[Audio] Loading audio for message:', messageId);
 
-      // 获取消息对象以获取chatTips
-      const message = this.data.messages.find(msg => msg.id === messageId);
-      const chatTips = message ? message.chatTips : null;
-
       // 轮询获取音频URL
       let attempts = 0;
       const maxAttempts = 10;
@@ -546,9 +545,9 @@ Page({
               audioUrl: result.audio_url
             });
 
-            // 自动播放，并传递chatTips
+            // 自动播放
             setTimeout(() => {
-              this.autoPlayAudio(result.audio_url, messageId, chatTips);
+              this.autoPlayAudio(result.audio_url, messageId, null);
             }, 300);
 
             return true;
