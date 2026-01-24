@@ -91,8 +91,18 @@ Page({
   // 初始化音频播放器
   initAudioPlayer() {
     this.innerAudioContext = wx.createInnerAudioContext();
+    
+    // 设置为不遵守静音开关，允许在静音模式下播放
+    this.innerAudioContext.obeyMuteSwitch = false;
+    // 设置自动播放（在某些场景下有效）
+    this.innerAudioContext.autoplay = false; // 手动控制播放时机
+
+    this.innerAudioContext.onPlay(() => {
+      console.log('音频开始播放');
+    });
 
     this.innerAudioContext.onEnded(() => {
+      console.log('音频播放结束');
       if (this.data.playingMessageId) {
         this.updateMessagePlayingState(this.data.playingMessageId, false);
         this.setData({ playingMessageId: null });
@@ -106,19 +116,47 @@ Page({
     });
 
     this.innerAudioContext.onError((err) => {
-      console.error('播放错误', err);
+      console.error('音频播放器错误:', err);
+      console.error('错误代码:', err.errCode);
+      console.error('错误信息:', err.errMsg);
       if (this.data.playingMessageId) {
         this.updateMessagePlayingState(this.data.playingMessageId, false);
         this.setData({ playingMessageId: null });
       }
-      wx.showToast({ title: '播放失败', icon: 'none' });
+      
+      // 显示更详细的错误信息
+      const errorMessages = {
+        10001: '系统错误',
+        10002: '网络错误',
+        10003: '文件错误',
+        10004: '格式错误'
+      };
+      const errorMsg = errorMessages[err.errCode] || '播放失败';
+      wx.showToast({ title: errorMsg, icon: 'none', duration: 2000 });
     });
 
     this.innerAudioContext.onStop(() => {
+      console.log('音频播放停止');
       if (this.data.playingMessageId) {
         this.updateMessagePlayingState(this.data.playingMessageId, false);
         this.setData({ playingMessageId: null });
       }
+    });
+
+    this.innerAudioContext.onCanplay(() => {
+      console.log('音频可以播放了');
+    });
+
+    this.innerAudioContext.onWaiting(() => {
+      console.log('音频加载中...');
+    });
+
+    this.innerAudioContext.onSeeking(() => {
+      console.log('音频跳转中');
+    });
+
+    this.innerAudioContext.onSeeked(() => {
+      console.log('音频跳转完成');
     });
   },
 
@@ -182,9 +220,7 @@ Page({
         
         // 自动播放开场白语音
         if (response.audio_url) {
-          setTimeout(() => {
-            this.autoPlayAudio(response.audio_url, greetingMsgId);
-          }, 1000); // 给页面一些时间渲染
+          this.autoPlayAudio(response.audio_url, greetingMsgId);
         }
       }
     } catch (error) {
@@ -458,12 +494,22 @@ Page({
     // 确保使用完整的URL
     const fullUrl = audioUrl.startsWith('http') ? audioUrl : `${app.globalData.baseUrl}${audioUrl}`;
     
+    console.log('播放音频:', fullUrl);
+    
+    this.setData({ playingMessageId: messageId });
+    this.updateMessagePlayingState(messageId, true);
+    
+    // 设置音频源并播放
     this.innerAudioContext.src = fullUrl;
     this.innerAudioContext.play();
-    this.setData({ playingMessageId: messageId });
     
-    // 更新对应组件的播放状态
-    this.updateMessagePlayingState(messageId, true);
+    // 添加播放失败的回调
+    this.innerAudioContext.onError((err) => {
+      console.error('音频播放失败:', err);
+      console.error('音频URL:', fullUrl);
+      this.updateMessagePlayingState(messageId, false);
+      this.setData({ playingMessageId: null });
+    });
   },
 
   // 停止音频播放
@@ -477,14 +523,32 @@ Page({
 
   // 自动播放AI回复音频
   autoPlayAudio(audioUrl, messageId, chatTips) {
-    if (audioUrl) {
-      this.playAudio(audioUrl, messageId);
-      // 如果是提示模式且有对话提示，在播放完成后显示
-      if (this.data.learningMode === 'prompt' && chatTips) {
-        this._pendingChatTips = chatTips;
-        this._pendingMessageId = messageId;
-      }
+    if (!audioUrl) {
+      console.warn('没有音频URL，跳过自动播放');
+      return;
     }
+    
+    console.log('自动播放音频:', audioUrl, '消息ID:', messageId);
+    
+    // 使用setTimeout确保页面渲染完成
+    setTimeout(() => {
+      try {
+        this.playAudio(audioUrl, messageId);
+        
+        // 如果是提示模式且有对话提示，在播放完成后显示
+        if (this.data.learningMode === 'prompt' && chatTips) {
+          this._pendingChatTips = chatTips;
+          this._pendingMessageId = messageId;
+        }
+      } catch (err) {
+        console.error('自动播放失败:', err);
+        wx.showToast({ 
+          title: '音频播放失败', 
+          icon: 'none',
+          duration: 2000
+        });
+      }
+    }, 300);
   },
 
   // 更新消息的播放状态
