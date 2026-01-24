@@ -35,6 +35,10 @@ Component({
     hideText: {
       type: Boolean,
       value: false
+    },
+    messageId: {
+      type: String,
+      value: ''
     }
   },
 
@@ -71,6 +75,7 @@ Component({
       if (this.properties.audioUrl && !this.properties.transcribing && !this.properties.error) {
         this.triggerEvent('audiotap', {
           audioUrl: this.properties.audioUrl,
+          messageId: this.properties.messageId,
           playing: this.properties.playing,
           role: this.properties.role
         });

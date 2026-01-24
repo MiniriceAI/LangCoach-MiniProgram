@@ -45,6 +45,7 @@
             error="{{item.error}}"
             playing="{{playingMessageId === item.id}}"
             hide-text="{{item.hideText}}"
+            message-id="{{item.id}}"
             bind:wordtap="onWordTap"
             bind:audiotap="onAudioTap"
           />
@@ -195,4 +196,16 @@
     bind:close="closeRatingModal"
     bind:restart="restartSession"
   />
+
+  <!-- 音频权限提示 -->
+  <view class="audio-tip-overlay" wx:if="{{showAudioTip}}">
+    <view class="audio-tip-modal">
+      <view class="tip-icon">🔊</view>
+      <text class="tip-title">开启音频播放</text>
+      <text class="tip-desc">点击任意音频按钮开启自动播放功能</text>
+      <view class="tip-actions">
+        <view class="tip-btn cancel" bindtap="hideAudioTip">知道了</view>
+      </view>
+    </view>
+  </view>
 </view>
