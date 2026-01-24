@@ -153,16 +153,3 @@
   font-size: 24rpx;
   color: rgba(255, 255, 255, 0.6);
 }
-
-/* 流式输出光标 */
-.streaming-cursor {
-  display: inline-block;
-  margin-left: 4rpx;
-  color: #8b5cf6;
-  animation: blink 1s infinite;
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
-}

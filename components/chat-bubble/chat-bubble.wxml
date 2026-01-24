@@ -30,8 +30,6 @@
       data-word="{{item}}"
       bindtap="onWordTap"
     >{{item}}</text>
-    <!-- 流式输出光标 -->
-    <text wx:if="{{streaming}}" class="streaming-cursor">▊</text>
   </view>
 
   <!-- 转写中的提示 -->

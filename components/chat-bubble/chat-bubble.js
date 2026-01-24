@@ -35,10 +35,6 @@ Component({
     hideText: {
       type: Boolean,
       value: false
-    },
-    streaming: {
-      type: Boolean,
-      value: false
     }
   },
 
