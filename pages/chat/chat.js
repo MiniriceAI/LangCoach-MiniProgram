@@ -33,7 +33,10 @@ Page({
     // 当前显示的对话提示
     currentChatTips: null,
     // 是否显示对话提示
-    showChatTips: false
+    showChatTips: false,
+    // 触摸相关状态
+    touchStartY: 0,
+    isCancelArea: false
   },
 
   // 录音管理器
@@ -42,6 +45,8 @@ Page({
   innerAudioContext: null,
   // 录音计时器
   recordingTimer: null,
+  // 录音是否被取消
+  recordingCancelled: false,
 
   onLoad(options) {
     this.initRecorder();
@@ -73,6 +78,13 @@ Page({
     this.recorderManager.onStop((res) => {
       console.log('录音结束', res);
       this.stopRecordingTimer();
+      
+      // 如果录音被取消，不处理录音结果
+      if (this.recordingCancelled) {
+        this.recordingCancelled = false;
+        return;
+      }
+      
       if (res.duration < 1000) {
         wx.showToast({ title: '录音时间太短', icon: 'none' });
         return;
@@ -256,11 +268,56 @@ Page({
     });
   },
 
+  // 触摸开始
+  onTouchStart(e) {
+    const touch = e.touches[0];
+    this.setData({
+      touchStartY: touch.clientY,
+      isCancelArea: false
+    });
+    this.startRecording();
+  },
+
+  // 触摸移动
+  onTouchMove(e) {
+    if (!this.data.isRecording) return;
+    
+    const touch = e.touches[0];
+    const moveY = this.data.touchStartY - touch.clientY;
+    const isCancelArea = moveY > 100; // 上滑超过100px进入取消区域
+    
+    if (isCancelArea !== this.data.isCancelArea) {
+      this.setData({ isCancelArea });
+      
+      // 可选：添加震动反馈
+      if (isCancelArea) {
+        wx.vibrateShort({ type: 'light' });
+      }
+    }
+  },
+
+  // 触摸结束
+  onTouchEnd(e) {
+    if (!this.data.isRecording) return;
+    
+    if (this.data.isCancelArea) {
+      this.cancelRecording();
+    } else {
+      this.stopRecording();
+    }
+    
+    this.setData({
+      touchStartY: 0,
+      isCancelArea: false
+    });
+  },
+
   // 开始录音
   startRecording() {
     wx.authorize({
       scope: 'scope.record',
       success: () => {
+        this.recordingCancelled = false;
         this.setData({ isRecording: true, recordingDuration: 0 });
         this.recorderManager.start({
           duration: 60000,
@@ -296,8 +353,13 @@ Page({
   // 取消录音
   cancelRecording() {
     if (this.data.isRecording) {
+      this.recordingCancelled = true;
       this.recorderManager.stop();
-      this.setData({ isRecording: false });
+      this.stopRecordingTimer();
+      this.setData({ 
+        isRecording: false,
+        recordingDuration: 0
+      });
       wx.showToast({ title: '已取消', icon: 'none' });
     }
   },

@@ -287,6 +287,11 @@
   color: #FFFFFF;
 }
 
+.voice-btn.cancel-area {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  color: #FFFFFF;
+}
+
 /* 录音状态提示 */
 .recording-overlay {
   position: fixed;
@@ -302,6 +307,10 @@
   z-index: 100;
 }
 
+.recording-overlay.cancel-mode {
+  background: rgba(251, 191, 36, 0.3);
+}
+
 .recording-indicator {
   display: flex;
   flex-direction: column;
@@ -309,6 +318,12 @@
   padding: 60rpx;
   background: rgba(0, 0, 0, 0.8);
   border-radius: 24rpx;
+  transition: all 0.3s ease;
+}
+
+.recording-indicator.cancel-state {
+  background: rgba(245, 158, 11, 0.9);
+  transform: scale(1.05);
 }
 
 .recording-icon {
@@ -349,6 +364,12 @@
   padding: 20rpx 40rpx;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 30rpx;
+  transition: all 0.3s ease;
+}
+
+.cancel-area.active {
+  background: rgba(245, 158, 11, 0.8);
+  transform: scale(1.1);
 }
 
 .cancel-text {

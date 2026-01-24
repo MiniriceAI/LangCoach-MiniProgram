@@ -137,12 +137,13 @@
       <!-- 语音输入 -->
       <view class="voice-input-wrapper" wx:if="{{inputMode === 'voice'}}">
         <view
-          class="voice-btn {{isRecording ? 'recording' : ''}}"
-          bindtouchstart="startRecording"
-          bindtouchend="stopRecording"
-          bindtouchcancel="cancelRecording"
+          class="voice-btn {{isRecording ? 'recording' : ''}} {{isCancelArea ? 'cancel-area' : ''}}"
+          bindtouchstart="onTouchStart"
+          bindtouchmove="onTouchMove"
+          bindtouchend="onTouchEnd"
+          bindtouchcancel="onTouchEnd"
         >
-          <text>{{isRecording ? '松开发送' : '按住说话'}}</text>
+          <text>{{isRecording ? (isCancelArea ? '松开取消' : '松开发送') : '按住说话'}}</text>
         </view>
       </view>
 
@@ -172,15 +173,15 @@
   </view>
 
   <!-- 录音状态遮罩 -->
-  <view class="recording-overlay" wx:if="{{isRecording}}">
-    <view class="recording-indicator">
+  <view class="recording-overlay {{isCancelArea ? 'cancel-mode' : ''}}" wx:if="{{isRecording}}">
+    <view class="recording-indicator {{isCancelArea ? 'cancel-state' : ''}}">
       <view class="recording-icon">
-        <text class="mic-icon">🎤</text>
+        <text class="mic-icon">{{isCancelArea ? '❌' : '🎤'}}</text>
       </view>
       <text class="recording-time">{{recordingDuration}}"</text>
-      <text class="recording-tip">松开发送，上滑取消</text>
+      <text class="recording-tip">{{isCancelArea ? '松开取消录音' : '松开发送，上滑取消'}}</text>
     </view>
-    <view class="cancel-area">
+    <view class="cancel-area {{isCancelArea ? 'active' : ''}}">
       <text class="cancel-text">↑ 上滑取消</text>
     </view>
   </view>
