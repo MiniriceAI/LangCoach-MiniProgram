@@ -473,6 +473,9 @@ Page({
 
   // 处理语音消息
   async handleVoiceMessage(filePath, duration) {
+    // 用户发送新消息时，隐藏之前的对话提示
+    this.hideAllChatTips();
+
     // 先添加用户语音消息（显示加载状态）
     const userMsgId = this.addMessage({
       role: 'user',
@@ -538,6 +541,9 @@ Page({
   sendTextMessage() {
     const text = this.data.inputText.trim();
     if (!text) return;
+
+    // 用户发送新消息时，隐藏之前的对话提示
+    this.hideAllChatTips();
 
     this.addMessage({
       role: 'user',
@@ -944,6 +950,21 @@ Page({
   // 隐藏对话提示
   hideChatTips() {
     this.setData({
+      showChatTips: false,
+      currentChatTips: null
+    });
+  },
+
+  // 隐藏所有消息的对话提示
+  hideAllChatTips() {
+    const messages = this.data.messages.map(msg => {
+      if (msg.showTips) {
+        return { ...msg, showTips: false };
+      }
+      return msg;
+    });
+    this.setData({
+      messages,
       showChatTips: false,
       currentChatTips: null
     });
