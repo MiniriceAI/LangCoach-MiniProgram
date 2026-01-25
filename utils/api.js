@@ -133,6 +133,22 @@ const api = {
     list: () => request('/api/scenarios')
   },
 
+  // 自定义场景相关
+  customScenario: {
+    // 从用户输入提取场景信息
+    extract: (userInput) => request('/api/custom-scenario/extract', {
+      method: 'POST',
+      data: { user_input: userInput },
+      timeout: 60000
+    }),
+    // 生成场景prompt
+    generate: (scenarioInfo, userInput) => request('/api/custom-scenario/generate', {
+      method: 'POST',
+      data: { scenario_info: scenarioInfo, user_input: userInput },
+      timeout: 60000
+    })
+  },
+
   // 对话相关
   chat: {
     start: (data) => request('/api/chat/start', {

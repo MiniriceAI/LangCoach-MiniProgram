@@ -1,10 +1,14 @@
 <view class="chat-container">
   <!-- 顶部场景信息 -->
   <view class="chat-header">
+    <view class="header-left" bindtap="onExitTap">
+      <text class="exit-icon">✕</text>
+    </view>
     <view class="scenario-info">
       <text class="scenario-title">{{scenarioTitle}}</text>
     </view>
-    <view class="turn-counter">{{currentTurn}}/{{maxTurns}}</view>
+    <view class="turn-counter" wx:if="{{!isCustomScenario}}">{{currentTurn}}/{{maxTurns}}</view>
+    <view class="turn-counter" wx:else>自由对话</view>
   </view>
 
   <!-- 消息列表 -->
@@ -214,6 +218,28 @@
     <view class="greeting-tip-content">
       <view class="greeting-tip-icon">🔊</view>
       <text class="greeting-tip-text">点击播放语音</text>
+    </view>
+  </view>
+
+  <!-- 退出确认弹窗 -->
+  <view class="exit-modal-overlay" wx:if="{{showExitModal}}" bindtap="hideExitModal">
+    <view class="exit-modal-content" catchtap="">
+      <view class="exit-modal-icon">💬</view>
+      <view class="exit-modal-title">坚持就是胜利!</view>
+      <view class="exit-modal-stats">
+        <text>已对话 {{currentTurn}} 轮</text>
+        <text wx:if="{{!isCustomScenario}}"> 争取对话 10 轮以上有更好的练习效果哟</text>
+        <text wx:else> 继续练习可以获得更好的效果哟</text>
+      </view>
+      <view class="exit-modal-actions">
+        <view class="exit-btn continue" bindtap="hideExitModal">
+          <text class="btn-icon">💪</text>
+          <text>再练一下</text>
+        </view>
+        <view class="exit-btn quit" bindtap="confirmExit">
+          <text>直接退出</text>
+        </view>
+      </view>
     </view>
   </view>
 </view>

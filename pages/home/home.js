@@ -1,5 +1,6 @@
 const app = getApp();
 const { SCENARIOS, CATEGORIES, QUICK_SCENARIOS, ScenarioUtils } = require('../../utils/scenarios');
+const { api } = require('../../utils/api');
 
 Page({
   data: {
@@ -19,8 +20,31 @@ Page({
     // 快速练习场景
     quickScenarios: QUICK_SCENARIOS,
     // 展开的分类
-    expandedCategory: null
+    expandedCategory: null,
+    // 自定义场景相关
+    showCustomInputModal: false,
+    showScenarioPreviewModal: false,
+    customScenarioInput: '',
+    scenarioPreview: null,
+    isExtractingScenario: false,
+    generatedScenarioId: null,
+    generatedGreeting: null,
+    generatedAudioUrl: null
   },
+
+  // 随机场景示例
+  randomScenarioExamples: [
+    '小学三年级学生，去超市买文具',
+    '大学生在咖啡店点单',
+    '游客在机场问路',
+    '求职者参加英语面试',
+    '顾客在餐厅投诉菜品',
+    '租客和房东讨论租金',
+    '病人向医生描述症状',
+    '学生向老师请假',
+    '顾客在商场退换商品',
+    '旅客在酒店办理入住'
+  ],
 
   onLoad() {
     this.loadUserData();
@@ -160,6 +184,123 @@ Page({
     const { category } = e.currentTarget.dataset;
     wx.navigateTo({
       url: `/pages/scenarios/scenarios?category=${category}`
+    });
+  },
+
+  // ========== 自定义场景相关方法 ==========
+
+  // 显示自定义场景输入弹窗
+  showCustomScenarioModal() {
+    this.setData({
+      showCustomInputModal: true,
+      customScenarioInput: ''
+    });
+  },
+
+  // 隐藏自定义场景输入弹窗
+  hideCustomInputModal() {
+    this.setData({
+      showCustomInputModal: false,
+      customScenarioInput: ''
+    });
+  },
+
+  // 自定义场景输入变化
+  onCustomInputChange(e) {
+    this.setData({
+      customScenarioInput: e.detail.value
+    });
+  },
+
+  // 生成随机场景
+  generateRandomScenario() {
+    const randomIndex = Math.floor(Math.random() * this.randomScenarioExamples.length);
+    this.setData({
+      customScenarioInput: this.randomScenarioExamples[randomIndex]
+    });
+  },
+
+  // 提交自定义场景
+  async submitCustomScenario() {
+    const input = this.data.customScenarioInput.trim();
+    if (!input) {
+      wx.showToast({ title: '请输入场景描述', icon: 'none' });
+      return;
+    }
+
+    // 隐藏输入弹窗，显示预览弹窗
+    this.setData({
+      showCustomInputModal: false,
+      showScenarioPreviewModal: true,
+      isExtractingScenario: true
+    });
+
+    try {
+      // 调用API提取场景信息
+      const scenarioInfo = await api.customScenario.extract(input);
+
+      this.setData({
+        scenarioPreview: scenarioInfo,
+        isExtractingScenario: false
+      });
+
+      // 生成场景prompt
+      const generateResult = await api.customScenario.generate(scenarioInfo, input);
+
+      this.setData({
+        generatedScenarioId: generateResult.scenario_id,
+        generatedGreeting: generateResult.greeting,
+        generatedAudioUrl: generateResult.audio_url
+      });
+
+    } catch (error) {
+      console.error('提取场景信息失败:', error);
+      this.setData({
+        isExtractingScenario: false,
+        showScenarioPreviewModal: false
+      });
+      wx.showToast({ title: '场景分析失败，请重试', icon: 'none' });
+    }
+  },
+
+  // 隐藏场景预览弹窗
+  hideScenarioPreviewModal() {
+    this.setData({
+      showScenarioPreviewModal: false,
+      scenarioPreview: null,
+      generatedScenarioId: null,
+      generatedGreeting: null,
+      generatedAudioUrl: null
+    });
+  },
+
+  // 开始自定义场景对话
+  startCustomScenarioChat() {
+    const { generatedScenarioId, generatedGreeting, generatedAudioUrl, scenarioPreview, customScenarioInput } = this.data;
+
+    if (!generatedScenarioId) {
+      wx.showToast({ title: '场景生成中，请稍候', icon: 'none' });
+      return;
+    }
+
+    // 隐藏弹窗
+    this.setData({
+      showScenarioPreviewModal: false
+    });
+
+    // 保存自定义场景配置
+    app.globalData.settings.scenario = {
+      scenario: generatedScenarioId,
+      title: customScenarioInput,
+      greeting: generatedGreeting,
+      audioUrl: generatedAudioUrl,
+      isCustom: true,
+      scenarioInfo: scenarioPreview
+    };
+
+    // 跳转到对话页
+    wx.switchTab({
+      url: '/pages/chat/chat'
     });
   }
 });

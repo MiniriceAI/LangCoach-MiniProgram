@@ -19,6 +19,20 @@
     </view>
   </view>
 
+  <!-- 自定义场景卡片 -->
+  <view class="custom-scenario-card card" bindtap="showCustomScenarioModal">
+    <view class="custom-card-content">
+      <view class="custom-card-icon">✨</view>
+      <view class="custom-card-info">
+        <text class="custom-card-title">自定义场景</text>
+        <text class="custom-card-desc">自己决定聊什么</text>
+      </view>
+    </view>
+    <view class="custom-card-btn">
+      <text>开始畅聊</text>
+    </view>
+  </view>
+
   <!-- 每日挑战卡片 -->
   <view class="daily-challenge card" bindtap="startDailyChallenge">
     <view class="challenge-header">
@@ -110,6 +124,105 @@
               <text class="time-info">⏱️ 约{{scenario.estimatedTime}}分钟</text>
             </view>
           </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 自定义场景输入弹窗 -->
+  <view class="modal-overlay" wx:if="{{showCustomInputModal}}" bindtap="hideCustomInputModal">
+    <view class="modal-content custom-input-modal" catchtap="">
+      <view class="modal-header">
+        <text class="modal-cancel" bindtap="hideCustomInputModal">取消</text>
+        <text class="modal-title">自定义场景</text>
+        <text class="modal-confirm {{customScenarioInput ? '' : 'disabled'}}" bindtap="submitCustomScenario">确定</text>
+      </view>
+      <view class="modal-body">
+        <textarea
+          class="custom-input-textarea"
+          placeholder="描述你想练习的场景，例如：小学三年级学生，去超市买文具"
+          value="{{customScenarioInput}}"
+          bindinput="onCustomInputChange"
+          maxlength="200"
+          auto-focus
+        />
+        <view class="input-counter">{{customScenarioInput.length || 0}}/200</view>
+        <view class="random-scenario-btn" bindtap="generateRandomScenario">
+          <text class="random-icon">🎲</text>
+          <text>随机场景</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 场景预览弹窗 -->
+  <view class="modal-overlay" wx:if="{{showScenarioPreviewModal}}" bindtap="hideScenarioPreviewModal">
+    <view class="modal-content scenario-preview-modal" catchtap="">
+      <!-- 加载状态 -->
+      <view class="preview-loading" wx:if="{{isExtractingScenario}}">
+        <view class="loading-spinner"></view>
+        <text class="loading-text">AI正在分析场景...</text>
+      </view>
+
+      <!-- 预览内容 -->
+      <view class="preview-content" wx:else>
+        <view class="preview-header">
+          <view class="preview-icon">✏️</view>
+          <view class="preview-title-section">
+            <text class="preview-title">{{customScenarioInput}}</text>
+            <text class="preview-subtitle">{{scenarioPreview.scenario_summary}}</text>
+          </view>
+        </view>
+
+        <view class="preview-task-badge">
+          <text class="task-label">Task</text>
+        </view>
+        <view class="preview-task-desc">
+          <text>与{{scenarioPreview.ai_role_cn}}进行角色扮演，请尽量高效完成以下对话目标和挑战，系统会自动帮你判断任务完成情况～</text>
+        </view>
+
+        <view class="preview-roles">
+          <view class="role-item">
+            <text class="role-label">AI机器人 | AI robot</text>
+            <text class="role-value">{{scenarioPreview.ai_role_cn}}</text>
+            <text class="role-value-en">{{scenarioPreview.ai_role}}</text>
+          </view>
+          <view class="role-item">
+            <text class="role-label">我的角色 | My role</text>
+            <text class="role-value">{{scenarioPreview.user_role_cn}}</text>
+            <text class="role-value-en">{{scenarioPreview.user_role}}</text>
+          </view>
+        </view>
+
+        <view class="preview-section">
+          <text class="section-title">目标</text>
+          <text class="section-content">{{scenarioPreview.goal_cn}}</text>
+          <text class="section-content-en">{{scenarioPreview.goal}}</text>
+        </view>
+
+        <view class="preview-section">
+          <text class="section-title">挑战</text>
+          <text class="section-content">{{scenarioPreview.challenge_cn}}</text>
+          <text class="section-content-en">{{scenarioPreview.challenge}}</text>
+        </view>
+
+        <view class="preview-settings">
+          <view class="setting-item">
+            <text class="setting-label">难度</text>
+            <text class="setting-value {{scenarioPreview.difficulty_level}}">{{scenarioPreview.difficulty_level === 'easy' ? '简单' : scenarioPreview.difficulty_level === 'medium' ? '中等' : '困难'}}</text>
+          </view>
+          <view class="setting-item">
+            <text class="setting-label">语速</text>
+            <text class="setting-value">{{scenarioPreview.speaking_speed === 'slow' ? '慢速' : scenarioPreview.speaking_speed === 'medium' ? '正常' : '快速'}}</text>
+          </view>
+          <view class="setting-item">
+            <text class="setting-label">词汇</text>
+            <text class="setting-value">{{scenarioPreview.vocabulary === 'simple' ? '简单' : scenarioPreview.vocabulary === 'medium' ? '中等' : '高级'}}</text>
+          </view>
+        </view>
+
+        <view class="preview-start-btn" bindtap="startCustomScenarioChat">
+          <text>开始对话</text>
         </view>
       </view>
     </view>

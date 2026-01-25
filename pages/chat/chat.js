@@ -7,6 +7,7 @@ Page({
     // 场景信息
     scenario: null,
     scenarioTitle: '自由对话',
+    isCustomScenario: false,
     // 消息列表
     messages: [],
     // 输入相关
@@ -44,7 +45,9 @@ Page({
     pendingGreetingAudio: null,
     pendingGreetingMsgId: null,
     // 是否显示开场白播放提示
-    showGreetingPlayTip: false
+    showGreetingPlayTip: false,
+    // 退出确认弹窗
+    showExitModal: false
   },
 
   // 录音管理器
@@ -228,13 +231,20 @@ Page({
 
     let scenarioTitle = '自由对话';
     let scenarioId = null;
+    let isCustomScenario = false;
 
-    // 处理场景配置 - 支持两种格式:
+    // 处理场景配置 - 支持多种格式:
     // 1. { scenario: 'job_interview', title: '...' } - 来自 home 页面
     // 2. { id: 'job_interview', name: '...' } - 来自场景列表
+    // 3. { scenario: 'custom_xxx', isCustom: true, ... } - 自定义场景
     if (scenario) {
       scenarioId = scenario.scenario || scenario.id;
-      if (scenarioId) {
+      isCustomScenario = scenario.isCustom || (scenarioId && scenarioId.startsWith('custom_'));
+
+      if (isCustomScenario) {
+        // 自定义场景使用用户输入的标题
+        scenarioTitle = scenario.title || '自定义场景';
+      } else if (scenarioId) {
         const scenarioData = ScenarioUtils.getScenario(scenarioId);
         scenarioTitle = scenarioData ? scenarioData.name : scenario.title || scenario.name || '对话练习';
       } else if (scenario.title || scenario.name) {
@@ -245,7 +255,8 @@ Page({
     this.setData({
       scenario: scenario ? { ...scenario, scenario: scenarioId } : null,
       scenarioTitle: scenarioTitle,
-      maxTurns: settings.turns,
+      isCustomScenario: isCustomScenario,
+      maxTurns: isCustomScenario ? 9999 : settings.turns,
       messages: [],
       currentTurn: 0,
       sessionId: null
@@ -260,6 +271,10 @@ Page({
     this.setData({ isLoading: true });
 
     try {
+      // 检查是否是自定义场景且已有预生成的开场白
+      const scenario = this.data.scenario;
+      const isCustomWithGreeting = scenario && scenario.isCustom && scenario.greeting;
+
       const response = await api.chat.start({
         scenario: this.data.scenario,
         level: app.globalData.settings.level,
@@ -271,26 +286,29 @@ Page({
         isLoading: false
       });
 
-      // 添加AI开场白
-      if (response.greeting) {
+      // 添加AI开场白 - 自定义场景优先使用预生成的开场白
+      const greeting = isCustomWithGreeting ? scenario.greeting : response.greeting;
+      const audioUrl = isCustomWithGreeting && scenario.audioUrl ? scenario.audioUrl : response.audio_url;
+
+      if (greeting) {
         const greetingMsgId = this.addMessage({
           role: 'assistant',
-          content: response.greeting,
-          audioUrl: response.audio_url
+          content: greeting,
+          audioUrl: audioUrl
         });
-        
+
         // 处理开场白音频播放
-        if (response.audio_url) {
+        if (audioUrl) {
           // 检查是否已获得音频播放权限
           if (this.data.audioPermissionGranted) {
             // 已有权限，直接播放
             console.log('音频权限已获取，直接播放开场白');
-            this.autoPlayAudio(response.audio_url, greetingMsgId);
+            this.autoPlayAudio(audioUrl, greetingMsgId);
           } else {
             // 没有权限，保存待播放的音频信息，显示提示
             console.log('音频权限未获取，保存开场白音频待播放');
             this.setData({
-              pendingGreetingAudio: response.audio_url,
+              pendingGreetingAudio: audioUrl,
               pendingGreetingMsgId: greetingMsgId,
               showGreetingPlayTip: true
             });
@@ -1075,5 +1093,39 @@ Page({
   // 隐藏开场白播放提示
   hideGreetingPlayTip() {
     this.setData({ showGreetingPlayTip: false });
+  },
+
+  // ========== 退出确认相关方法 ==========
+
+  // 点击退出按钮
+  onExitTap() {
+    // 如果对话轮数较少，显示确认弹窗
+    if (this.data.currentTurn > 0) {
+      this.setData({ showExitModal: true });
+    } else {
+      // 没有对话直接退出
+      this.confirmExit();
+    }
+  },
+
+  // 隐藏退出确认弹窗
+  hideExitModal() {
+    this.setData({ showExitModal: false });
+  },
+
+  // 确认退出
+  confirmExit() {
+    this.setData({ showExitModal: false });
+
+    // 清理资源
+    this.cleanup();
+
+    // 清除场景配置
+    app.globalData.settings.scenario = null;
+
+    // 返回首页
+    wx.switchTab({
+      url: '/pages/home/home'
+    });
   }
 });
