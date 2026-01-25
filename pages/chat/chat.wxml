@@ -142,13 +142,14 @@
       <!-- 语音输入 -->
       <view class="voice-input-wrapper" wx:if="{{inputMode === 'voice'}}">
         <view
-          class="voice-btn {{isRecording ? 'recording' : ''}} {{isCancelArea ? 'cancel-area' : ''}}"
-          bindtouchstart="onTouchStart"
-          bindtouchmove="onTouchMove"
-          bindtouchend="onTouchEnd"
-          bindtouchcancel="onTouchEnd"
+          class="voice-btn {{isRecording ? 'recording' : ''}} {{isCancelArea ? 'cancel-area' : ''}} {{!sessionReady ? 'disabled' : ''}}"
+          bindtouchstart="{{sessionReady ? 'onTouchStart' : ''}}"
+          bindtouchmove="{{sessionReady ? 'onTouchMove' : ''}}"
+          bindtouchend="{{sessionReady ? 'onTouchEnd' : ''}}"
+          bindtouchcancel="{{sessionReady ? 'onTouchEnd' : ''}}"
+          bindtap="{{!sessionReady ? 'onSessionNotReady' : ''}}"
         >
-          <text>{{isRecording ? (isCancelArea ? '松开取消' : '松开发送') : '按住说话'}}</text>
+          <text>{{!sessionReady ? '连接中...' : (isRecording ? (isCancelArea ? '松开取消' : '松开发送') : '按住说话')}}</text>
         </view>
       </view>
 
@@ -156,21 +157,22 @@
       <view class="text-input-wrapper" wx:else>
         <input
           class="text-input"
-          placeholder="输入消息..."
+          placeholder="{{sessionReady ? '输入消息...' : '连接中...'}}"
           value="{{inputText}}"
           bindinput="onInputChange"
           bindconfirm="sendTextMessage"
           confirm-type="send"
           adjust-position="{{false}}"
           bindkeyboardheightchange="onKeyboardHeightChange"
+          disabled="{{!sessionReady}}"
         />
       </view>
 
       <!-- 发送按钮 -->
       <view
-        class="send-btn {{inputText ? '' : 'disabled'}}"
+        class="send-btn {{inputText && sessionReady ? '' : 'disabled'}}"
         wx:if="{{inputMode === 'text'}}"
-        bindtap="sendTextMessage"
+        bindtap="{{sessionReady ? 'sendTextMessage' : 'onSessionNotReady'}}"
       >
         <text style="color: #fff; font-size: 36rpx;">➤</text>
       </view>

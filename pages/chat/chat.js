@@ -19,6 +19,7 @@ Page({
     voiceAnimationData: {},
     // 会话状态
     sessionId: null,
+    sessionReady: false,
     isLoading: false,
     currentTurn: 0,
     maxTurns: 20,
@@ -259,7 +260,8 @@ Page({
       maxTurns: isCustomScenario ? 9999 : settings.turns,
       messages: [],
       currentTurn: 0,
-      sessionId: null
+      sessionId: null,
+      sessionReady: false
     });
 
     // 开始新会话
@@ -267,7 +269,7 @@ Page({
   },
 
   // 开始会话
-  async startSession() {
+  async startSession(retryCount = 0) {
     this.setData({ isLoading: true });
 
     try {
@@ -275,16 +277,31 @@ Page({
       const scenario = this.data.scenario;
       const isCustomWithGreeting = scenario && scenario.isCustom && scenario.greeting;
 
+      console.log('Starting session with scenario:', JSON.stringify(this.data.scenario));
+      console.log('Retry count:', retryCount);
+
       const response = await api.chat.start({
         scenario: this.data.scenario,
         level: app.globalData.settings.level,
         turns: this.data.maxTurns
       });
 
+      console.log('Session started, full response:', response);
+      console.log('Response type:', typeof response);
+      console.log('Response session_id:', response?.session_id);
+
+      if (!response || !response.session_id) {
+        console.error('Invalid session response:', response);
+        throw new Error('Invalid session response: missing session_id');
+      }
+
       this.setData({
         sessionId: response.session_id,
-        isLoading: false
+        isLoading: false,
+        sessionReady: true
       });
+
+      console.log('Session ID set to:', this.data.sessionId);
 
       // 添加AI开场白 - 自定义场景优先使用预生成的开场白
       const greeting = isCustomWithGreeting ? scenario.greeting : response.greeting;
@@ -317,8 +334,42 @@ Page({
       }
     } catch (error) {
       console.error('开始会话失败', error);
-      this.setData({ isLoading: false });
-      // 添加模拟开场白
+      console.error('Error details:', error.message, error.stack);
+
+      // 重试机制：最多重试2次
+      if (retryCount < 2) {
+        console.log(`Retrying session start... (attempt ${retryCount + 2})`);
+        wx.showToast({
+          title: '正在重试连接...',
+          icon: 'loading',
+          duration: 1500
+        });
+
+        setTimeout(() => {
+          this.startSession(retryCount + 1);
+        }, 1500);
+        return;
+      }
+
+      this.setData({
+        isLoading: false,
+        sessionReady: false
+      });
+
+      // 显示错误提示，提供重试选项
+      wx.showModal({
+        title: '连接失败',
+        content: '无法连接到服务器，请检查网络后重试',
+        confirmText: '重试',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            this.startSession(0);
+          }
+        }
+      });
+
+      // 添加模拟开场白（但标记会话未就绪）
       this.addMessage({
         role: 'assistant',
         content: this.getDefaultGreeting()
@@ -556,13 +607,38 @@ Page({
 
   // 发送到AI
   async sendToAI(text) {
+    // 检查session_id是否存在
+    if (!this.data.sessionId || !this.data.sessionReady) {
+      console.error('Cannot send message: session not ready, sessionId:', this.data.sessionId, 'sessionReady:', this.data.sessionReady);
+
+      // 尝试重新建立会话
+      wx.showModal({
+        title: '会话未建立',
+        content: '是否重新连接服务器？',
+        confirmText: '重新连接',
+        cancelText: '取消',
+        success: (res) => {
+          if (res.confirm) {
+            this.startSession(0);
+          }
+        }
+      });
+
+      this.setData({ isLoading: false });
+      return;
+    }
+
     this.setData({ isLoading: true });
 
     try {
+      console.log('Sending message to AI, session_id:', this.data.sessionId, 'message:', text);
+
       const response = await api.chat.message({
         session_id: this.data.sessionId,
         message: text
       });
+
+      console.log('AI response received:', JSON.stringify(response));
 
       this.setData({
         isLoading: false,
@@ -588,6 +664,10 @@ Page({
         }, 500); // 稍微延迟以确保渲染完成
       } else {
         console.log('没有收到音频URL，跳过自动播放');
+        // 如果没有音频，直接显示对话提示
+        if (response.chat_tips && this.data.learningMode === 'prompt') {
+          this.showChatTipsForMessage(aiMsgId, response.chat_tips);
+        }
       }
 
       // 检查是否结束
@@ -597,6 +677,13 @@ Page({
     } catch (error) {
       console.error('发送消息失败', error);
       this.setData({ isLoading: false });
+
+      wx.showToast({
+        title: '发送失败，请重试',
+        icon: 'none',
+        duration: 2000
+      });
+
       // 模拟回复
       this.addMessage({
         role: 'assistant',
@@ -1147,6 +1234,21 @@ Page({
     // 返回首页
     wx.switchTab({
       url: '/pages/home/home'
+    });
+  },
+
+  // 会话未就绪时的提示
+  onSessionNotReady() {
+    wx.showModal({
+      title: '会话未建立',
+      content: '正在连接服务器，是否重试？',
+      confirmText: '重试',
+      cancelText: '取消',
+      success: (res) => {
+        if (res.confirm) {
+          this.startSession(0);
+        }
+      }
     });
   }
 });
