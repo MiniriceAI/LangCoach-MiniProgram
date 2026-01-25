@@ -39,7 +39,12 @@ Page({
     isCancelArea: false,
     // 音频播放权限状态
     audioPermissionGranted: false,
-    showAudioTip: false
+    showAudioTip: false,
+    // 待播放的开场白音频（首次加载时需要用户交互后才能播放）
+    pendingGreetingAudio: null,
+    pendingGreetingMsgId: null,
+    // 是否显示开场白播放提示
+    showGreetingPlayTip: false
   },
 
   // 录音管理器
@@ -274,9 +279,22 @@ Page({
           audioUrl: response.audio_url
         });
         
-        // 自动播放开场白语音
+        // 处理开场白音频播放
         if (response.audio_url) {
-          this.autoPlayAudio(response.audio_url, greetingMsgId);
+          // 检查是否已获得音频播放权限
+          if (this.data.audioPermissionGranted) {
+            // 已有权限，直接播放
+            console.log('音频权限已获取，直接播放开场白');
+            this.autoPlayAudio(response.audio_url, greetingMsgId);
+          } else {
+            // 没有权限，保存待播放的音频信息，显示提示
+            console.log('音频权限未获取，保存开场白音频待播放');
+            this.setData({
+              pendingGreetingAudio: response.audio_url,
+              pendingGreetingMsgId: greetingMsgId,
+              showGreetingPlayTip: true
+            });
+          }
         }
       }
     } catch (error) {
@@ -367,8 +385,13 @@ Page({
           isRecording: true, 
           recordingDuration: 0,
           audioPermissionGranted: true,
-          showAudioTip: false
+          showAudioTip: false,
+          showGreetingPlayTip: false
         });
+        
+        // 如果有待播放的开场白音频，先播放它
+        this.playPendingGreetingAudio();
+        
         this.recorderManager.start({
           duration: 60000,
           sampleRate: 16000,
@@ -913,7 +936,20 @@ Page({
     const { id, audioUrl } = e.currentTarget.dataset;
     if (audioUrl) {
       // 用户主动点击播放，标记权限已获取
-      this.setData({ audioPermissionGranted: true, showAudioTip: false });
+      this.setData({ 
+        audioPermissionGranted: true, 
+        showAudioTip: false,
+        showGreetingPlayTip: false
+      });
+      
+      // 清除待播放的开场白（如果用户点击其他音频播放，说明已交互）
+      if (this.data.pendingGreetingAudio) {
+        this.setData({
+          pendingGreetingAudio: null,
+          pendingGreetingMsgId: null
+        });
+      }
+      
       this.playAudio(audioUrl, id);
     }
   },
@@ -926,8 +962,17 @@ Page({
     // 标记用户已同意播放音频
     this.setData({ 
       audioPermissionGranted: true, 
-      showAudioTip: false 
+      showAudioTip: false,
+      showGreetingPlayTip: false
     });
+    
+    // 清除待播放的开场白
+    if (this.data.pendingGreetingAudio) {
+      this.setData({
+        pendingGreetingAudio: null,
+        pendingGreetingMsgId: null
+      });
+    }
     
     // 播放音频
     this.playAudio(audioUrl, messageId);
@@ -950,10 +995,18 @@ Page({
       testAudio.volume = 0; // 静音
       testAudio.obeyMuteSwitch = false;
       
+      const self = this;
       testAudio.onPlay(() => {
         console.log('预解锁成功：音频播放权限已获取');
-        this.setData({ audioPermissionGranted: true, showAudioTip: false });
+        self.setData({ 
+          audioPermissionGranted: true, 
+          showAudioTip: false,
+          showGreetingPlayTip: false
+        });
         testAudio.destroy();
+        
+        // 预解锁成功后，播放待播放的开场白
+        self.playPendingGreetingAudio();
       });
       
       testAudio.onError((err) => {
@@ -982,5 +1035,45 @@ Page({
   // 隐藏音频提示
   hideAudioTip() {
     this.setData({ showAudioTip: false });
+  },
+
+  // 播放待播放的开场白音频
+  playPendingGreetingAudio() {
+    const { pendingGreetingAudio, pendingGreetingMsgId } = this.data;
+    
+    if (pendingGreetingAudio && pendingGreetingMsgId) {
+      console.log('播放待播放的开场白音频:', pendingGreetingAudio);
+      
+      // 清除待播放状态
+      this.setData({
+        pendingGreetingAudio: null,
+        pendingGreetingMsgId: null,
+        showGreetingPlayTip: false
+      });
+      
+      // 延迟播放，确保用户交互已完成
+      setTimeout(() => {
+        this.directPlayAudio(pendingGreetingAudio, pendingGreetingMsgId, null);
+      }, 300);
+    }
+  },
+
+  // 点击播放开场白提示
+  onGreetingPlayTap() {
+    console.log('用户点击播放开场白');
+    
+    // 标记已获得权限
+    this.setData({ 
+      audioPermissionGranted: true,
+      showGreetingPlayTip: false
+    });
+    
+    // 播放待播放的开场白
+    this.playPendingGreetingAudio();
+  },
+
+  // 隐藏开场白播放提示
+  hideGreetingPlayTip() {
+    this.setData({ showGreetingPlayTip: false });
   }
 });

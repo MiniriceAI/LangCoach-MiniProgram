@@ -208,4 +208,12 @@
       </view>
     </view>
   </view>
+
+  <!-- 开场白音频播放提示 - 首次进入时显示 -->
+  <view class="greeting-audio-tip" wx:if="{{showGreetingPlayTip && pendingGreetingAudio}}" bindtap="onGreetingPlayTap">
+    <view class="greeting-tip-content">
+      <view class="greeting-tip-icon">🔊</view>
+      <text class="greeting-tip-text">点击播放语音</text>
+    </view>
+  </view>
 </view>
