@@ -439,6 +439,16 @@
   color: var(--text-hint);
 }
 
+.modal-random {
+  font-size: 28rpx;
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.modal-random:active {
+  opacity: 0.7;
+}
+
 .modal-body {
   padding: 30rpx;
 }
@@ -459,6 +469,34 @@
   font-size: 24rpx;
   color: var(--text-hint);
   margin-top: 12rpx;
+}
+
+.confirm-scenario-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30rpx;
+  padding: 24rpx;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 40rpx;
+  color: #FFFFFF;
+  font-size: 32rpx;
+  font-weight: 500;
+}
+
+.confirm-scenario-btn:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+.confirm-scenario-btn.disabled {
+  background: #E8E8E8;
+  color: var(--text-hint);
+}
+
+.confirm-scenario-btn.disabled:active {
+  opacity: 1;
+  transform: none;
 }
 
 .random-scenario-btn {

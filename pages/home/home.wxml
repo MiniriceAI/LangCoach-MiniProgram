@@ -130,12 +130,12 @@
   </view>
 
   <!-- 自定义场景输入弹窗 -->
-  <view class="modal-overlay" wx:if="{{showCustomInputModal}}" bindtap="hideCustomInputModal">
+  <view class="modal-overlay" wx:if="{{showCustomInputModal}}">
     <view class="modal-content custom-input-modal" catchtap="">
       <view class="modal-header">
         <text class="modal-cancel" bindtap="hideCustomInputModal">取消</text>
         <text class="modal-title">自定义场景</text>
-        <text class="modal-confirm {{customScenarioInput ? '' : 'disabled'}}" bindtap="submitCustomScenario">确定</text>
+        <text class="modal-random" bindtap="generateRandomScenario">🎲 随机</text>
       </view>
       <view class="modal-body">
         <textarea
@@ -147,9 +147,8 @@
           auto-focus
         />
         <view class="input-counter">{{customScenarioInput.length || 0}}/200</view>
-        <view class="random-scenario-btn" bindtap="generateRandomScenario">
-          <text class="random-icon">🎲</text>
-          <text>随机场景</text>
+        <view class="confirm-scenario-btn {{customScenarioInput ? '' : 'disabled'}}" bindtap="submitCustomScenario">
+          <text>确定</text>
         </view>
       </view>
     </view>
