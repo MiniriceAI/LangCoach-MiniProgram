@@ -172,6 +172,11 @@ Page({
     this.setData({ showSessionSettings: false });
   },
 
+  // 阻止事件冒泡
+  preventBubble() {
+    // 空方法，仅用于阻止事件冒泡
+  },
+
   // 选择会话语音角色
   selectSessionVoice(e) {
     const voice = e.currentTarget.dataset.voice;
@@ -1010,9 +1015,11 @@ Page({
       // 自动播放AI语音回复
       if (response.audio_url) {
         console.log('准备自动播放AI回复音频:', response.audio_url);
-        setTimeout(() => {
+        // iOS 真机需要在用户交互上下文中尽快调用播放
+        // 使用 wx.nextTick 确保 DOM 更新后立即播放，而不是 setTimeout
+        wx.nextTick(() => {
           this.autoPlayAudio(response.audio_url, aiMsgId, response.chat_tips);
-        }, 500); // 稍微延迟以确保渲染完成
+        });
       } else {
         console.log('没有收到音频URL，跳过自动播放');
         // 如果没有音频，直接显示对话提示
@@ -1117,7 +1124,9 @@ Page({
     console.log('=== 自动播放音频 ===');
     console.log('音频URL:', audioUrl);
     console.log('消息ID:', messageId);
+    console.log('audioPermissionGranted:', this.data.audioPermissionGranted);
     
+    // 用户已经进行了交互（发送消息），应该可以播放
     // 直接调用播放方法
     this.directPlayAudio(audioUrl, messageId, chatTips);
   },
@@ -1139,7 +1148,11 @@ Page({
     
     // 重新创建音频上下文以确保干净的状态
     if (this.innerAudioContext) {
-      this.innerAudioContext.destroy();
+      try {
+        this.innerAudioContext.destroy();
+      } catch (e) {
+        console.log('销毁旧音频上下文时出错:', e);
+      }
     }
     
     this.innerAudioContext = wx.createInnerAudioContext({
@@ -1147,35 +1160,56 @@ Page({
     });
     this.innerAudioContext.obeyMuteSwitch = false;
     
+    const self = this;
+    
     // 设置播放回调
     this.innerAudioContext.onPlay(() => {
       console.log('音频开始播放');
-      this.setData({ audioPermissionGranted: true, showAudioTip: false });
+      self.setData({ audioPermissionGranted: true, showAudioTip: false });
     });
     
     this.innerAudioContext.onEnded(() => {
       console.log('音频播放结束');
-      this.updateMessagePlayingState(messageId, false);
-      this.setData({ playingMessageId: null });
+      self.updateMessagePlayingState(messageId, false);
+      self.setData({ playingMessageId: null });
       
       // 播放结束后显示对话提示
-      if (this._pendingChatTips && this.data.learningMode === 'prompt') {
-        this.showChatTipsForMessage(this._pendingMessageId, this._pendingChatTips);
-        this._pendingChatTips = null;
-        this._pendingMessageId = null;
+      if (self._pendingChatTips && self.data.learningMode === 'prompt') {
+        self.showChatTipsForMessage(self._pendingMessageId, self._pendingChatTips);
+        self._pendingChatTips = null;
+        self._pendingMessageId = null;
       }
     });
     
     this.innerAudioContext.onError((err) => {
       console.error('音频播放错误:', err);
-      this.updateMessagePlayingState(messageId, false);
-      this.setData({ playingMessageId: null });
+      console.error('错误详情:', JSON.stringify(err));
+      self.updateMessagePlayingState(messageId, false);
+      self.setData({ playingMessageId: null });
+      
+      // iOS 真机可能因为自动播放限制失败，尝试重新播放
+      if (err.errCode === 10003 || (err.errMsg && err.errMsg.includes('abort'))) {
+        console.log('可能是自动播放被阻止，稍后重试');
+        // 保存待播放信息，用户下次交互时播放
+        self._pendingAutoPlayAudio = {
+          audioUrl: fullUrl,
+          messageId: messageId,
+          chatTips: chatTips
+        };
+      }
     });
     
     // 设置音频源并播放
     console.log('设置音频源:', fullUrl);
     this.innerAudioContext.src = fullUrl;
-    this.innerAudioContext.play();
+    
+    // iOS 真机需要确保在用户交互上下文中调用 play
+    // 由于这是在用户发送消息后的响应，应该是有效的交互上下文
+    try {
+      this.innerAudioContext.play();
+    } catch (e) {
+      console.error('播放调用失败:', e);
+    }
     
     // 如果是提示模式且有对话提示，在播放完成后显示
     if (this.data.learningMode === 'prompt' && chatTips) {

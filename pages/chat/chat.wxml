@@ -263,7 +263,7 @@
       </view>
 
       <!-- 发音设置 -->
-      <view class="setting-section">
+      <view class="setting-section" catchtap="preventBubble">
         <view class="section-title">发音设置</view>
         <view class="voice-grid">
           <view
@@ -271,7 +271,7 @@
             wx:for="{{voiceOptions}}"
             wx:key="code"
             data-voice="{{item.code}}"
-            bindtap="selectSessionVoice"
+            catchtap="selectSessionVoice"
           >
             <text class="voice-grid-name">{{item.name}}</text>
             <text class="voice-grid-desc">{{item.desc}}</text>
@@ -280,27 +280,27 @@
       </view>
 
       <!-- 语速设置 -->
-      <view class="setting-section">
+      <view class="setting-section" catchtap="preventBubble">
         <view class="section-title">语速设置</view>
         <view class="speed-options">
           <view
             class="speed-option {{sessionSettings.speakingSpeed === 'slow' ? 'selected' : ''}}"
             data-speed="slow"
-            bindtap="selectSpeakingSpeed"
+            catchtap="selectSpeakingSpeed"
           >
             <text>较慢</text>
           </view>
           <view
             class="speed-option {{sessionSettings.speakingSpeed === 'medium' ? 'selected' : ''}}"
             data-speed="medium"
-            bindtap="selectSpeakingSpeed"
+            catchtap="selectSpeakingSpeed"
           >
             <text>标准</text>
           </view>
           <view
             class="speed-option {{sessionSettings.speakingSpeed === 'fast' ? 'selected' : ''}}"
             data-speed="fast"
-            bindtap="selectSpeakingSpeed"
+            catchtap="selectSpeakingSpeed"
           >
             <text>较快</text>
           </view>
