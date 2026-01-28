@@ -56,7 +56,8 @@ const SCENARIOS = {
     icon: '🏠',
     prompt_file: 'renting_prompt.j2',
     tags: ['租房', '房屋', '中介', '生活']
-  },
+  }
+};
 
 // 按分类组织场景
 const CATEGORIES = {
