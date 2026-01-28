@@ -1,26 +1,14 @@
 <view class="container">
-  <!-- 标签切换 -->
-  <view class="tab-bar">
-    <view
-      class="tab-item {{activeTab === 'reports' ? 'active' : ''}}"
-      data-tab="reports"
-      bindtap="switchTab"
-    >
-      学习报告
-    </view>
-    <view
-      class="tab-item {{activeTab === 'flashcards' ? 'active' : ''}}"
-      data-tab="flashcards"
-      bindtap="switchTab"
-    >
-      生词本
-    </view>
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">学习报告</text>
+    <text class="page-subtitle">查看你的对话练习记录</text>
   </view>
 
   <!-- 内容区域 -->
   <view class="content">
     <!-- 学习报告 -->
-    <view class="report-list" wx:if="{{activeTab === 'reports'}}">
+    <view class="report-list">>
       <view wx:if="{{reports.length === 0}}" class="empty-state">
         <text class="empty-icon">📊</text>
         <text class="empty-title">暂无学习报告</text>
@@ -62,13 +50,6 @@
             <text class="score-num">{{item.scores.grammar}}</text>
           </view>
           <view class="score-item">
-            <text class="score-name">词汇</text>
-            <view class="score-bar">
-              <view class="score-fill" style="width: {{item.scores.vocabulary}}%; background: {{item.scores.vocabulary >= 90 ? '#52C41A' : item.scores.vocabulary >= 70 ? '#FAAD14' : '#FF4D4F'}}"></view>
-            </view>
-            <text class="score-num">{{item.scores.vocabulary}}</text>
-          </view>
-          <view class="score-item">
             <text class="score-name">流利度</text>
             <view class="score-bar">
               <view class="score-fill" style="width: {{item.scores.fluency}}%; background: {{item.scores.fluency >= 90 ? '#52C41A' : item.scores.fluency >= 70 ? '#FAAD14' : '#FF4D4F'}}"></view>
@@ -88,83 +69,6 @@
           </view>
         </view>
       </view>
-    </view>
-
-    <!-- 生词本 -->
-    <view class="flashcard-section" wx:if="{{activeTab === 'flashcards'}}">
-      <view wx:if="{{flashcards.length === 0}}" class="empty-state">
-        <text class="empty-icon">📚</text>
-        <text class="empty-title">生词本是空的</text>
-        <text class="empty-desc">在对话中点击不认识的单词，可以添加到生词本</text>
-      </view>
-
-      <view wx:else>
-        <view class="flashcard-header">
-          <text class="flashcard-count">共 {{flashcards.length}} 个单词</text>
-          <view class="review-btn" bindtap="startReview">
-            <text class="btn-icon">🎯</text>
-            <text>开始复习</text>
-          </view>
-        </view>
-
-        <view class="flashcard-list">
-          <view
-            class="flashcard-item card"
-            wx:for="{{flashcards}}"
-            wx:key="word"
-          >
-            <view class="word-info">
-              <view class="word-text">{{item.word}}</view>
-              <view class="word-phonetic" wx:if="{{item.phonetic}}">{{item.phonetic}}</view>
-              <view class="word-definition">{{item.definition}}</view>
-            </view>
-            <view class="word-actions">
-              <view
-                class="word-action-btn learned"
-                data-index="{{index}}"
-                bindtap="markAsLearned"
-              >✓</view>
-              <view
-                class="word-action-btn delete"
-                data-index="{{index}}"
-                bindtap="deleteFlashcard"
-              >×</view>
-            </view>
-          </view>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 复习模式 -->
-  <view class="review-mode" wx:if="{{isReviewMode}}">
-    <view class="review-header">
-      <text class="review-progress">{{currentCardIndex + 1}} / {{flashcards.length}}</text>
-      <view class="exit-btn" bindtap="exitReview">退出</view>
-    </view>
-
-    <view class="review-content">
-      <view class="review-card" bindtap="flipCard">
-        <text class="review-word">{{flashcards[currentCardIndex].word}}</text>
-        <text class="review-phonetic" wx:if="{{flashcards[currentCardIndex].phonetic}}">
-          {{flashcards[currentCardIndex].phonetic}}
-        </text>
-        <text class="review-definition" wx:if="{{showAnswer}}">
-          {{flashcards[currentCardIndex].definition}}
-        </text>
-        <text class="tap-hint" wx:if="{{!showAnswer}}">点击查看释义</text>
-      </view>
-    </view>
-
-    <view class="review-actions">
-      <view
-        class="review-action-btn prev {{currentCardIndex === 0 ? 'disabled' : ''}}"
-        bindtap="prevCard"
-      >上一个</view>
-      <view
-        class="review-action-btn next"
-        bindtap="nextCard"
-      >{{currentCardIndex === flashcards.length - 1 ? '完成' : '下一个'}}</view>
     </view>
   </view>
 </view>

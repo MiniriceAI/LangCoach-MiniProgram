@@ -11,7 +11,6 @@
  * - /api/chat/feedback  - 消息反馈
  * - /api/transcribe     - 语音转文字
  * - /api/synthesize     - 文字转语音
- * - /api/dictionary     - 词典查询
  * - /api/scenarios      - 场景列表
  * - /api/auth/wechat    - 微信登录
  */
@@ -188,11 +187,6 @@ const api = {
       data: { text, speaker, fast_mode: fastMode },
       timeout: 60000
     })
-  },
-
-  // 词典
-  dictionary: {
-    lookup: (word) => request(`/api/dictionary?word=${encodeURIComponent(word)}`)
   },
 
   // TTS 语音角色

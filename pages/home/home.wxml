@@ -214,10 +214,6 @@
             <text class="setting-label">语速</text>
             <text class="setting-value">{{scenarioPreview.speaking_speed === 'slow' ? '慢速' : scenarioPreview.speaking_speed === 'medium' ? '正常' : '快速'}}</text>
           </view>
-          <view class="setting-item">
-            <text class="setting-label">词汇</text>
-            <text class="setting-value">{{scenarioPreview.vocabulary === 'simple' ? '简单' : scenarioPreview.vocabulary === 'medium' ? '中等' : '高级'}}</text>
-          </view>
         </view>
 
         <view class="preview-start-btn" bindtap="startCustomScenarioChat">

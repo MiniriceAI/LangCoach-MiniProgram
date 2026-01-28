@@ -8,7 +8,6 @@ Page({
     stats: {
       totalMinutes: 0,
       totalSessions: 0,
-      wordsLearned: 0,
       currentStreak: 0
     },
     // 当前设置
@@ -80,12 +79,8 @@ Page({
   // 加载统计数据
   loadStats() {
     const stats = app.globalData.stats;
-    const flashcards = wx.getStorageSync('flashcards') || [];
     this.setData({
-      stats: {
-        ...stats,
-        wordsLearned: flashcards.length
-      }
+      stats: stats
     });
   },
 
@@ -206,7 +201,6 @@ Page({
           const token = wx.getStorageSync('token');
           const stats = wx.getStorageSync('stats');
           const settings = wx.getStorageSync('settings');
-          const flashcards = wx.getStorageSync('flashcards');
 
           wx.clearStorageSync();
 
@@ -215,7 +209,6 @@ Page({
           if (token) wx.setStorageSync('token', token);
           if (stats) wx.setStorageSync('stats', stats);
           if (settings) wx.setStorageSync('settings', settings);
-          if (flashcards) wx.setStorageSync('flashcards', flashcards);
 
           this.calculateCacheSize();
           wx.showToast({ title: '清除成功', icon: 'success' });

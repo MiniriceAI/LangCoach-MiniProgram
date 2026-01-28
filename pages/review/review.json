@@ -1,7 +1,5 @@
 {
-  "navigationBarTitleText": "复习",
-  "usingComponents": {
-    "flashcard": "/components/flashcard/flashcard"
-  },
+  "navigationBarTitleText": "学习报告",
+  "usingComponents": {},
   "enablePullDownRefresh": true
 }

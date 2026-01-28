@@ -28,10 +28,6 @@
         <view class="stat-label">完成对话</view>
       </view>
       <view class="stat-item">
-        <view class="stat-value">{{stats.wordsLearned}}</view>
-        <view class="stat-label">学习单词</view>
-      </view>
-      <view class="stat-item">
         <view class="stat-value">{{stats.currentStreak}}</view>
         <view class="stat-label">连续天数</view>
       </view>

@@ -9,7 +9,7 @@
     <!-- 分数展示 -->
     <view class="score-section" wx:if="{{report}}">
       <view class="overall-score">
-        <text class="score-number">{{report.grammarScore + report.vocabularyScore + report.fluencyScore > 0 ? Math.round((report.grammarScore + report.vocabularyScore + report.fluencyScore) / 3) : '--'}}</text>
+        <text class="score-number">{{report.grammarScore + report.fluencyScore > 0 ? Math.round((report.grammarScore + report.fluencyScore) / 2) : '--'}}</text>
         <text class="score-label">综合评分</text>
       </view>
 
@@ -20,13 +20,6 @@
             <view class="score-fill" style="width: {{report.grammarScore}}%; background: {{report.grammarScore >= 80 ? '#52C41A' : report.grammarScore >= 60 ? '#FAAD14' : '#FF4D4F'}}"></view>
           </view>
           <text class="item-value">{{report.grammarScore}}</text>
-        </view>
-        <view class="score-item">
-          <text class="item-label">词汇</text>
-          <view class="score-bar">
-            <view class="score-fill" style="width: {{report.vocabularyScore}}%; background: {{report.vocabularyScore >= 80 ? '#52C41A' : report.vocabularyScore >= 60 ? '#FAAD14' : '#FF4D4F'}}"></view>
-          </view>
-          <text class="item-value">{{report.vocabularyScore}}</text>
         </view>
         <view class="score-item">
           <text class="item-label">流利度</text>

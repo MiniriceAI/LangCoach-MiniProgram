@@ -58,21 +58,6 @@ const SCENARIOS = {
     tags: ['租房', '房屋', '中介', '生活']
   },
 
-  // 学习场景
-  vocab_study: {
-    id: 'vocab_study',
-    name: '词汇练习',
-    title: 'Vocabulary Learning Session',
-    description: '通过情景对话学习新单词',
-    category: 'learning',
-    difficulty: 'A2-C1',
-    estimatedTime: 10,
-    icon: '📚',
-    prompt_file: 'vocab_study_prompt.j2',
-    tags: ['词汇', '单词', '学习', '基础']
-  }
-};
-
 // 按分类组织场景
 const CATEGORIES = {
   professional: {
@@ -89,14 +74,6 @@ const CATEGORIES = {
     icon: '🏠',
     color: '#52C41A',
     scenarios: ['hotel_checkin', 'renting']
-  },
-
-  learning: {
-    id: 'learning',
-    name: '词汇学习',
-    icon: '📚',
-    color: '#FAAD14', 
-    scenarios: ['vocab_study']
   }
 };
 
@@ -120,11 +97,11 @@ const QUICK_SCENARIOS = [
 
 // 难度等级配置
 const DIFFICULTY_LEVELS = {
-  'A1': { name: '初级', color: '#52C41A', description: '基础词汇和简单语法' },
-  'A2': { name: '初中级', color: '#52C41A', description: '常用词汇和基本交流' },
+  'A1': { name: '初级', color: '#52C41A', description: '基础语法和简单对话' },
+  'A2': { name: '初中级', color: '#52C41A', description: '日常交流和基本表达' },
   'B1': { name: '中级', color: '#FAAD14', description: '日常对话和基本商务' },
   'B2': { name: '中高级', color: '#FAAD14', description: '复杂话题和专业讨论' },
-  'C1': { name: '高级', color: '#FF4D4F', description: '流利表达和高级词汇' },
+  'C1': { name: '高级', color: '#FF4D4F', description: '流利表达和复杂语法' },
   'C2': { name: '精通', color: '#FF4D4F', description: '母语水平的理解和表达' }
 };
 

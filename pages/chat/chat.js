@@ -876,45 +876,15 @@ Page({
     }
   },
 
-  // 点击单词查看翻译
+  // 点击单词查看翻译（简化版本）
   onWordTap(e) {
     const { word } = e.detail;
-    wx.showLoading({ title: '查询中...' });
-
-    api.dictionary.lookup(word).then(res => {
-      wx.hideLoading();
-      wx.showModal({
-        title: word,
-        content: `${res.phonetic || ''}\n${res.definition || '暂无释义'}`,
-        confirmText: '加入生词本',
-        cancelText: '关闭',
-        success: (result) => {
-          if (result.confirm) {
-            this.addToFlashcards(word, res);
-          }
-        }
-      });
-    }).catch(() => {
-      wx.hideLoading();
-      wx.showToast({ title: '查询失败', icon: 'none' });
+    // 简单显示单词，不提供字典查询和生词本功能
+    wx.showToast({ 
+      title: `You clicked: ${word}`, 
+      icon: 'none',
+      duration: 1500
     });
-  },
-
-  // 加入生词本
-  addToFlashcards(word, definition) {
-    const flashcards = wx.getStorageSync('flashcards') || [];
-    if (!flashcards.find(f => f.word === word)) {
-      flashcards.push({
-        word,
-        definition: definition.definition,
-        phonetic: definition.phonetic,
-        addedAt: Date.now()
-      });
-      wx.setStorageSync('flashcards', flashcards);
-      wx.showToast({ title: '已添加', icon: 'success' });
-    } else {
-      wx.showToast({ title: '已在生词本中', icon: 'none' });
-    }
   },
 
   // 结束会话
