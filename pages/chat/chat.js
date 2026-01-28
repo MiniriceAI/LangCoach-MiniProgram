@@ -93,45 +93,20 @@ Page({
 
   // 检测音频播放权限
   detectAudioPermission() {
-    console.log('开始检测音频播放权限...');
-    
     // 创建一个临时音频播放器测试权限
-    const testAudio = wx.createInnerAudioContext({
-      useWebAudioImplement: true
-    });
+    const testAudio = wx.createInnerAudioContext();
     testAudio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+HwymMcBDyS2e/MdSEIL3v47lUCWZ2+eR==';
-    testAudio.volume = 0; // 静音测试
-    testAudio.obeyMuteSwitch = false;
-    
-    testAudio.onPlay(() => {
-      console.log('音频播放权限检测成功 - 可以自动播放');
+    testAudio.volume = 0;
+    testAudio.onCanplay(() => {
+      console.log('音频权限检测：可以播放');
       this.setData({ audioPermissionGranted: true });
       testAudio.destroy();
     });
-    
-    testAudio.onError((err) => {
-      console.log('音频播放权限检测失败:', err);
-      // 权限未获得，需要用户交互
+    testAudio.onError(() => {
+      console.log('音频权限检测：需要用户交互');
       testAudio.destroy();
     });
-    
-    // 尝试播放测试音频
-    try {
-      testAudio.play();
-      
-      // 2秒后清理，防止内存泄漏
-      setTimeout(() => {
-        try {
-          testAudio.destroy();
-        } catch (e) {
-          // 忽略销毁错误
-        }
-      }, 2000);
-      
-    } catch (err) {
-      console.log('创建测试音频失败:', err);
-      testAudio.destroy();
-    }
+    testAudio.play();
   },
 
   onShow() {
@@ -202,27 +177,14 @@ Page({
         console.log('更新权限状态为已授权');
         this.setData({ audioPermissionGranted: true, showAudioTip: false });
       }
-      
-      // 播放成功，清除待播放状态和提示
-      const messageId = this._currentPlayingMessageId;
-      this.setData({ 
-        showAudioTip: false,
-        showGreetingPlayTip: false,
-        // 如果当前播放的是开场白，清除待播放状态
-        pendingGreetingAudio: this.data.pendingGreetingMsgId === messageId ? null : this.data.pendingGreetingAudio,
-        pendingGreetingMsgId: this.data.pendingGreetingMsgId === messageId ? null : this.data.pendingGreetingMsgId
-      });
     });
 
     this.innerAudioContext.onEnded(() => {
       console.log('音频播放结束');
-      const messageId = this._currentPlayingMessageId;
-      if (messageId) {
-        this.updateMessagePlayingState(messageId, false);
+      if (this.data.playingMessageId) {
+        this.updateMessagePlayingState(this.data.playingMessageId, false);
+        this.setData({ playingMessageId: null });
       }
-      this.setData({ playingMessageId: null });
-      this._currentPlayingMessageId = null;
-      
       // 播放结束后，如果是提示模式且有待显示的对话提示，则显示
       if (this._pendingChatTips && this.data.learningMode === 'prompt') {
         this.showChatTipsForMessage(this._pendingMessageId, this._pendingChatTips);
@@ -236,22 +198,16 @@ Page({
       console.error('错误代码:', err.errCode);
       console.error('错误信息:', err.errMsg);
       
-      const messageId = this._currentPlayingMessageId;
-      if (messageId) {
-        this.updateMessagePlayingState(messageId, false);
+      if (this.data.playingMessageId) {
+        this.updateMessagePlayingState(this.data.playingMessageId, false);
+        this.setData({ playingMessageId: null });
       }
-      this.setData({ playingMessageId: null });
-      this._currentPlayingMessageId = null;
       
-      // 检查是否为权限相关错误或需要用户交互
-      if (err.errCode === 10003 || err.errMsg.includes('interrupted') || err.errMsg.includes('NotAllowed') || err.errMsg.includes('play() failed')) {
+      // 检查是否为权限相关错误
+      if (err.errCode === 10003 || err.errMsg.includes('interrupted') || err.errMsg.includes('NotAllowed')) {
         console.log('可能是音频权限问题，显示提示');
         this.setData({ showAudioTip: true });
-        // 如果是开场白播放失败，设置待播放状态
-        if (this.data.pendingGreetingMsgId === messageId) {
-          this.setData({ showGreetingPlayTip: true });
-        }
-      } else if (err.errCode !== -1) { // -1 通常是用户主动停止
+      } else {
         // 显示更详细的错误信息
         const errorMessages = {
           10001: '系统错误',
@@ -260,18 +216,16 @@ Page({
           10004: '格式错误'
         };
         const errorMsg = errorMessages[err.errCode] || '播放失败';
-        console.log('播放错误:', errorMsg);
+        wx.showToast({ title: errorMsg, icon: 'none', duration: 2000 });
       }
     });
 
     this.innerAudioContext.onStop(() => {
       console.log('音频播放停止');
-      const messageId = this._currentPlayingMessageId;
-      if (messageId) {
-        this.updateMessagePlayingState(messageId, false);
+      if (this.data.playingMessageId) {
+        this.updateMessagePlayingState(this.data.playingMessageId, false);
+        this.setData({ playingMessageId: null });
       }
-      this.setData({ playingMessageId: null });
-      this._currentPlayingMessageId = null;
     });
 
     this.innerAudioContext.onCanplay(() => {
@@ -394,52 +348,19 @@ Page({
 
         // 处理开场白音频播放
         if (audioUrl) {
-          console.log('准备播放开场白音频:', audioUrl);
-          
-          // 保存开场白音频信息，用于后续可能的手动播放
-          this.setData({
-            pendingGreetingAudio: audioUrl,
-            pendingGreetingMsgId: greetingMsgId
-          });
-          
-          // 检测环境
-          const systemInfo = wx.getSystemInfoSync();
-          const isIOS = systemInfo.platform === 'ios';
-          const isDevTools = systemInfo.platform === 'devtools';
-          
-          console.log('播放环境:', systemInfo.platform);
-          
-          if (isDevTools) {
-            // 开发工具中直接播放
-            setTimeout(() => {
-              this.autoPlayAudio(audioUrl, greetingMsgId, chatTips);
-            }, 500);
-          } else if (isIOS) {
-            // iOS 真机：先尝试播放，同时准备显示提示
-            setTimeout(() => {
-              this.autoPlayAudio(audioUrl, greetingMsgId, chatTips);
-              
-              // iOS 上 1 秒后检查是否需要显示提示
-              setTimeout(() => {
-                if (this.data.pendingGreetingAudio) {
-                  console.log('iOS 自动播放可能失败，显示点击播放提示');
-                  this.setData({ showGreetingPlayTip: true });
-                }
-              }, 1000);
-            }, 300);
+          // 检查是否已获得音频播放权限
+          if (this.data.audioPermissionGranted) {
+            // 已有权限，直接播放
+            console.log('音频权限已获取，直接播放开场白');
+            this.autoPlayAudio(audioUrl, greetingMsgId);
           } else {
-            // Android 真机
-            setTimeout(() => {
-              this.autoPlayAudio(audioUrl, greetingMsgId, chatTips);
-              
-              // 2秒后检查是否播放成功
-              setTimeout(() => {
-                if (this.data.pendingGreetingAudio) {
-                  console.log('自动播放可能失败，显示用户引导');
-                  this.setData({ showGreetingPlayTip: true });
-                }
-              }, 2000);
-            }, 500);
+            // 没有权限，保存待播放的音频信息，显示提示
+            console.log('音频权限未获取，保存开场白音频待播放');
+            this.setData({
+              pendingGreetingAudio: audioUrl,
+              pendingGreetingMsgId: greetingMsgId,
+              showGreetingPlayTip: true
+            });
           }
         }
       }
@@ -512,38 +433,12 @@ Page({
 
   // 触摸开始
   onTouchStart(e) {
-    // 如果正在录音，忽略
-    if (this.data.isRecording) {
-      console.log('已在录音中，忽略触摸');
-      return;
-    }
-    
-    // 保存触摸信息用于后续使用
     const touch = e.touches[0];
-    this._touchStartY = touch.clientY;
-    this._touchStartTime = Date.now();
-    
-    // 检查录音权限
-    wx.getSetting({
-      success: (res) => {
-        if (res.authSetting['scope.record']) {
-          // 已有权限，设置触摸位置并开始录音
-          this.setData({
-            touchStartY: this._touchStartY,
-            isCancelArea: false
-          });
-          this.doStartRecording();
-        } else {
-          // 没有权限，显示授权弹窗
-          // 注意：不设置任何录音相关状态，避免界面卡住
-          console.log('需要请求录音权限');
-          this.requestRecordPermission();
-        }
-      },
-      fail: (err) => {
-        console.error('获取设置失败:', err);
-      }
+    this.setData({
+      touchStartY: touch.clientY,
+      isCancelArea: false
     });
+    this.startRecording();
   },
 
   // 触摸移动
@@ -566,14 +461,7 @@ Page({
 
   // 触摸结束
   onTouchEnd(e) {
-    // 清理临时触摸信息
-    this._touchStartY = 0;
-    this._touchStartTime = 0;
-    
-    // 如果没有在录音，直接返回
-    if (!this.data.isRecording) {
-      return;
-    }
+    if (!this.data.isRecording) return;
     
     if (this.data.isCancelArea) {
       this.cancelRecording();
@@ -597,61 +485,30 @@ Page({
           this.doStartRecording();
         } else {
           // 请求录音权限
-          this.requestRecordPermission();
-        }
-      },
-      fail: (err) => {
-        console.error('获取设置失败:', err);
-      }
-    });
-  },
-
-  // 请求录音权限
-  requestRecordPermission() {
-    wx.authorize({
-      scope: 'scope.record',
-      success: () => {
-        console.log('录音权限授权成功');
-        // 授权成功后，标记音频权限已获取（用户已交互）
-        this.setData({ audioPermissionGranted: true, showGreetingPlayTip: false });
-        // 不自动开始录音，等待用户再次点击
-        wx.showToast({ title: '授权成功，请再次点击录音', icon: 'none', duration: 1500 });
-      },
-      fail: () => {
-        console.log('录音权限授权失败');
-        wx.showModal({
-          title: '权限提示',
-          content: '需要录音权限才能使用语音功能',
-          success: (res) => {
-            if (res.confirm) {
-              wx.openSetting({
-                success: (settingRes) => {
-                  console.log('设置结果:', settingRes.authSetting);
-                  if (settingRes.authSetting['scope.record']) {
-                    // 用户在设置中开启了权限
-                    this.setData({ audioPermissionGranted: true, showGreetingPlayTip: false });
-                    wx.showToast({ title: '授权成功，请再次点击录音', icon: 'none', duration: 1500 });
+          wx.authorize({
+            scope: 'scope.record',
+            success: () => {
+              this.doStartRecording();
+            },
+            fail: () => {
+              wx.showModal({
+                title: '权限提示',
+                content: '需要录音权限才能使用语音功能',
+                success: (res) => {
+                  if (res.confirm) {
+                    wx.openSetting();
                   }
                 }
               });
             }
-          }
-        });
+          });
+        }
       }
     });
   },
 
   // 执行录音开始
   doStartRecording() {
-    // 停止任何正在播放的音频
-    if (this.innerAudioContext) {
-      try {
-        this.innerAudioContext.stop();
-      } catch (e) {
-        console.log('停止音频时出错:', e);
-      }
-    }
-    
     this.recordingCancelled = false;
     // 用户开始录音也视为交互，可以解锁音频播放权限
     this.setData({ 
@@ -659,13 +516,11 @@ Page({
       recordingDuration: 0,
       audioPermissionGranted: true,
       showAudioTip: false,
-      showGreetingPlayTip: false,
-      // 清除待播放的开场白，避免重复播放
-      pendingGreetingAudio: null,
-      pendingGreetingMsgId: null,
-      // 清除播放状态
-      playingMessageId: null
+      showGreetingPlayTip: false
     });
+    
+    // 如果有待播放的开场白音频，先播放它
+    this.playPendingGreetingAudio();
     
     this.recorderManager.start({
       duration: 60000,
@@ -961,17 +816,9 @@ Page({
     console.log('=== 自动播放音频 ===');
     console.log('音频URL:', audioUrl);
     console.log('消息ID:', messageId);
-    console.log('音频权限状态:', this.data.audioPermissionGranted);
     
-    // 如果已经有音频权限，直接播放
-    if (this.data.audioPermissionGranted) {
-      console.log('已有音频权限，直接播放');
-      this.directPlayAudio(audioUrl, messageId, chatTips);
-    } else {
-      // 没有权限，先尝试播放，失败后显示提示
-      console.log('尝试播放（可能需要用户交互）');
-      this.directPlayAudio(audioUrl, messageId, chatTips);
-    }
+    // 直接调用播放方法
+    this.directPlayAudio(audioUrl, messageId, chatTips);
   },
 
   // 直接播放音频的方法
@@ -981,62 +828,36 @@ Page({
     
     console.log('=== 直接播放音频 ===');
     console.log('完整URL:', fullUrl);
-    console.log('当前音频权限状态:', this.data.audioPermissionGranted);
+    
+    // 停止当前播放
+    this.stopAudio();
     
     // 更新状态
     this.setData({ playingMessageId: messageId });
     this.updateMessagePlayingState(messageId, true);
     
-    // 保存当前播放信息用于回调
-    this._currentPlayingMessageId = messageId;
-    this._currentChatTips = chatTips;
-    
-    // 如果是提示模式且有对话提示，在播放完成后显示
-    if (this.data.learningMode === 'prompt' && chatTips) {
-      this._pendingChatTips = chatTips;
-      this._pendingMessageId = messageId;
-    }
-    
-    // 重新创建音频上下文来解决 iOS 真机播放问题
-    this.playWithNewContext(fullUrl, messageId);
-  },
-  
-  // 使用新的音频上下文播放（解决 iOS 真机问题）
-  playWithNewContext(fullUrl, messageId) {
-    // 销毁旧的音频上下文
+    // 重新创建音频上下文以确保干净的状态
     if (this.innerAudioContext) {
-      try {
-        this.innerAudioContext.stop();
-        this.innerAudioContext.destroy();
-      } catch (e) {
-        console.log('销毁旧音频上下文失败:', e);
-      }
+      this.innerAudioContext.destroy();
     }
     
-    // 创建新的音频上下文
     this.innerAudioContext = wx.createInnerAudioContext({
       useWebAudioImplement: true
     });
     this.innerAudioContext.obeyMuteSwitch = false;
     
-    // 设置回调
+    // 设置播放回调
     this.innerAudioContext.onPlay(() => {
-      console.log('音频开始播放 - messageId:', messageId);
-      this.setData({ 
-        audioPermissionGranted: true,
-        showAudioTip: false,
-        showGreetingPlayTip: false,
-        pendingGreetingAudio: this.data.pendingGreetingMsgId === messageId ? null : this.data.pendingGreetingAudio,
-        pendingGreetingMsgId: this.data.pendingGreetingMsgId === messageId ? null : this.data.pendingGreetingMsgId
-      });
+      console.log('音频开始播放');
+      this.setData({ audioPermissionGranted: true, showAudioTip: false });
     });
     
     this.innerAudioContext.onEnded(() => {
-      console.log('音频播放结束 - messageId:', messageId);
+      console.log('音频播放结束');
       this.updateMessagePlayingState(messageId, false);
       this.setData({ playingMessageId: null });
-      this._currentPlayingMessageId = null;
       
+      // 播放结束后显示对话提示
       if (this._pendingChatTips && this.data.learningMode === 'prompt') {
         this.showChatTipsForMessage(this._pendingMessageId, this._pendingChatTips);
         this._pendingChatTips = null;
@@ -1045,38 +866,21 @@ Page({
     });
     
     this.innerAudioContext.onError((err) => {
-      console.error('音频播放错误:', err.errCode, err.errMsg);
+      console.error('音频播放错误:', err);
       this.updateMessagePlayingState(messageId, false);
       this.setData({ playingMessageId: null });
-      this._currentPlayingMessageId = null;
-      
-      // 如果是权限问题，显示提示
-      if (err.errCode === 10003 || err.errMsg.includes('NotAllowed') || err.errMsg.includes('play() failed') || err.errMsg.includes('interrupted')) {
-        console.log('iOS 音频权限问题，显示播放提示');
-        if (this.data.pendingGreetingMsgId === messageId || !this.data.audioPermissionGranted) {
-          this.setData({ showGreetingPlayTip: true });
-        }
-      }
     });
     
-    this.innerAudioContext.onCanplay(() => {
-      console.log('音频可以播放了');
-    });
-    
-    // 设置音频源
+    // 设置音频源并播放
     console.log('设置音频源:', fullUrl);
     this.innerAudioContext.src = fullUrl;
+    this.innerAudioContext.play();
     
-    // 直接尝试播放 - 如果用户已经交互过，这应该能工作
-    // 使用很短的延迟确保 src 已设置
-    setTimeout(() => {
-      console.log('尝试播放音频, audioPermissionGranted:', this.data.audioPermissionGranted);
-      try {
-        this.innerAudioContext.play();
-      } catch (e) {
-        console.error('播放调用失败:', e);
-      }
-    }, 50);
+    // 如果是提示模式且有对话提示，在播放完成后显示
+    if (this.data.learningMode === 'prompt' && chatTips) {
+      this._pendingChatTips = chatTips;
+      this._pendingMessageId = messageId;
+    }
   },
 
   // 处理播放错误
@@ -1362,7 +1166,9 @@ Page({
           showGreetingPlayTip: false
         });
         testAudio.destroy();
-        // 预解锁成功，不再自动播放开场白（避免重复播放）
+        
+        // 预解锁成功后，播放待播放的开场白
+        self.playPendingGreetingAudio();
       });
       
       testAudio.onError((err) => {
@@ -1400,10 +1206,6 @@ Page({
     if (pendingGreetingAudio && pendingGreetingMsgId) {
       console.log('播放待播放的开场白音频:', pendingGreetingAudio);
       
-      // 先保存引用，再清除状态
-      const audioUrl = pendingGreetingAudio;
-      const msgId = pendingGreetingMsgId;
-      
       // 清除待播放状态
       this.setData({
         pendingGreetingAudio: null,
@@ -1411,8 +1213,10 @@ Page({
         showGreetingPlayTip: false
       });
       
-      // 在用户点击事件中直接播放（iOS 需要同步触发）
-      this.directPlayAudio(audioUrl, msgId, null);
+      // 延迟播放，确保用户交互已完成
+      setTimeout(() => {
+        this.directPlayAudio(pendingGreetingAudio, pendingGreetingMsgId, null);
+      }, 300);
     }
   },
 
@@ -1420,28 +1224,14 @@ Page({
   onGreetingPlayTap() {
     console.log('用户点击播放开场白');
     
-    const { pendingGreetingAudio, pendingGreetingMsgId } = this.data;
-    
-    if (!pendingGreetingAudio || !pendingGreetingMsgId) {
-      console.log('没有待播放的开场白');
-      this.setData({ showGreetingPlayTip: false });
-      return;
-    }
-    
-    // 保存引用
-    const audioUrl = pendingGreetingAudio;
-    const msgId = pendingGreetingMsgId;
-    
-    // 标记已获得权限并清除状态
+    // 标记已获得权限
     this.setData({ 
       audioPermissionGranted: true,
-      showGreetingPlayTip: false,
-      pendingGreetingAudio: null,
-      pendingGreetingMsgId: null
+      showGreetingPlayTip: false
     });
     
-    // 在点击事件中直接播放（iOS 要求同步触发）
-    this.directPlayAudio(audioUrl, msgId, null);
+    // 播放待播放的开场白
+    this.playPendingGreetingAudio();
   },
 
   // 隐藏开场白播放提示
