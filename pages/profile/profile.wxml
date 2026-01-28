@@ -78,6 +78,16 @@
             <text class="setting-arrow">›</text>
           </view>
         </view>
+        <view class="setting-item" bindtap="showVoiceSelector">
+          <view class="setting-left">
+            <view class="setting-icon">🎤</view>
+            <text class="setting-name">语音角色</text>
+          </view>
+          <view class="setting-right">
+            <text class="setting-value">{{currentVoice}}</text>
+            <text class="setting-arrow">›</text>
+          </view>
+        </view>
         <view class="setting-item">
           <view class="setting-left">
             <view class="setting-icon">🔊</view>
@@ -194,6 +204,29 @@
       >
         <view class="level-code">{{item.value}}</view>
         <view class="level-desc">{{item.name}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 语音选择器 -->
+  <view class="overlay" wx:if="{{showVoicePicker}}" bindtap="hideVoiceSelector"></view>
+  <view class="voice-selector {{showVoicePicker ? 'show' : ''}}">
+    <view class="selector-header">
+      <text class="selector-title">选择语音角色</text>
+      <text class="selector-close" bindtap="hideVoiceSelector">×</text>
+    </view>
+    <view class="voice-options">
+      <view
+        class="voice-option {{currentVoice === item.code ? 'selected' : ''}}"
+        wx:for="{{voiceOptions}}"
+        wx:key="code"
+        data-voice="{{item.code}}"
+        bindtap="selectVoice"
+      >
+        <view class="voice-info">
+          <view class="voice-name">{{item.name}}</view>
+          <view class="voice-desc">{{item.desc}}</view>
+        </view>
       </view>
     </view>
   </view>

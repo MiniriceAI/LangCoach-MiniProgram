@@ -15,11 +15,13 @@ Page({
     currentTurns: 20,
     autoPlayAudio: true,
     enableReminder: false,
+    currentVoice: 'Ceylia',  // 当前选择的语音
     // 缓存大小
     cacheSize: '0 KB',
     // 选择器显示状态
     showLevelPicker: false,
     showTurnsPicker: false,
+    showVoicePicker: false,
     // 难度选项
     levelOptions: [
       { code: 'A1', name: '入门级' },
@@ -35,6 +37,17 @@ Page({
       { value: 20, name: '标准练习' },
       { value: 30, name: '深度练习' },
       { value: 50, name: '长对话' }
+    ],
+    // 语音选项
+    voiceOptions: [
+      { code: 'Ceylia', name: 'Ceylia', desc: '美式女声 - 友好' },
+      { code: 'Tifa', name: 'Tifa', desc: '美式女声 - 自然' },
+      { code: 'David', name: 'David', desc: '美式男声 - 温和' },
+      { code: 'Tony', name: 'Tony', desc: '美式男声 - 成熟' },
+      { code: 'Emma', name: 'Emma', desc: '英式女声 - 优雅' },
+      { code: 'Ryan', name: 'Ryan', desc: '英式男声 - 正式' },
+      { code: 'Sarah', name: 'Sarah', desc: '澳式女声 - 活泼' },
+      { code: 'William', name: 'William', desc: '澳式男声 - 友好' }
     ],
     // 成就列表
     achievements: [
@@ -71,6 +84,7 @@ Page({
     this.setData({
       currentLevel: settings.level || 'B1',
       currentTurns: settings.turns || 20,
+      currentVoice: settings.voice || 'Ceylia',  // 加载语音设置
       autoPlayAudio: wx.getStorageSync('autoPlayAudio') !== false,
       enableReminder: wx.getStorageSync('enableReminder') === true
     });
@@ -159,6 +173,27 @@ Page({
     });
     app.saveSettings({ turns });
     wx.showToast({ title: '已更新', icon: 'success' });
+  },
+
+  // 显示语音选择器
+  showVoiceSelector() {
+    this.setData({ showVoicePicker: true });
+  },
+
+  // 隐藏语音选择器
+  hideVoiceSelector() {
+    this.setData({ showVoicePicker: false });
+  },
+
+  // 选择语音
+  selectVoice(e) {
+    const voice = e.currentTarget.dataset.voice;
+    this.setData({
+      currentVoice: voice,
+      showVoicePicker: false
+    });
+    app.saveSettings({ voice });
+    wx.showToast({ title: '语音已更新', icon: 'success' });
   },
 
   // 切换自动播放

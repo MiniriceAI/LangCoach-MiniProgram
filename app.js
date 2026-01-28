@@ -10,6 +10,7 @@ App({
     settings: {
       turns: 20,        // 对话轮数: 10, 20, 30, 50
       level: 'B1',      // 难度等级: A1, A2, B1, B2, C1, C2
+      voice: 'Ceylia',  // 语音角色: Ceylia, Tifa, David, Tony, Emma, Ryan, Sarah, William
       scenario: null    // 当前场景
     },
     // 学习统计

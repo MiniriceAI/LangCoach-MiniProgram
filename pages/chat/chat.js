@@ -303,7 +303,8 @@ Page({
       const response = await api.chat.start({
         scenario: this.data.scenario,
         level: app.globalData.settings.level,
-        turns: this.data.maxTurns
+        turns: this.data.maxTurns,
+        speaker: app.globalData.settings.voice || 'Ceylia'  // 添加语音角色参数
       });
 
       console.log('Session started, full response:', response);
@@ -697,7 +698,8 @@ Page({
 
       const response = await api.chat.message({
         session_id: this.data.sessionId,
-        message: text
+        message: text,
+        speaker: app.globalData.settings.voice || 'Ceylia'  // 使用用户选择的语音角色
       });
 
       console.log('AI response received:', JSON.stringify(response));
