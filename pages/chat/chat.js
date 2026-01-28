@@ -306,13 +306,23 @@ Page({
       // 添加AI开场白 - 自定义场景优先使用预生成的开场白
       const greeting = isCustomWithGreeting ? scenario.greeting : response.greeting;
       const audioUrl = isCustomWithGreeting && scenario.audioUrl ? scenario.audioUrl : response.audio_url;
+      const chatTips = response.chat_tips;  // 获取开场白的对话提示
 
       if (greeting) {
         const greetingMsgId = this.addMessage({
           role: 'assistant',
           content: greeting,
-          audioUrl: audioUrl
+          audioUrl: audioUrl,
+          chatTips: chatTips  // 传递对话提示
         });
+
+        // 如果有对话提示，显示提示
+        if (chatTips && (chatTips.english || chatTips.chinese)) {
+          this.setData({
+            currentChatTips: chatTips,
+            showChatTips: this.data.learningMode === 'prompt'  // 根据学习模式决定是否显示
+          });
+        }
 
         // 处理开场白音频播放
         if (audioUrl) {

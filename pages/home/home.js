@@ -123,19 +123,42 @@ Page({
   },
 
   // 随机场景
-  startRandomScenario() {
+  async startRandomScenario() {
     wx.showLoading({ title: '生成场景中...' });
-    
-    setTimeout(() => {
+
+    try {
+      // 调用API生成随机场景
+      const scenarioInfo = await api.customScenario.random();
+
+      // 生成场景prompt
+      const generateResult = await api.customScenario.generate(scenarioInfo, scenarioInfo.scenario_summary_cn);
+
       wx.hideLoading();
-      const randomScenario = ScenarioUtils.getRandomScenario();
-      this.navigateToChat({
-        scenario: randomScenario.id,
-        title: randomScenario.name,
-        difficulty: randomScenario.difficulty,
-        category: randomScenario.category
+
+      // 保存自定义场景配置
+      app.globalData.settings.scenario = {
+        scenario: generateResult.scenario_id,
+        title: scenarioInfo.scenario_summary_cn,
+        greeting: generateResult.greeting,
+        audioUrl: generateResult.audio_url,
+        isCustom: true,
+        scenarioInfo: scenarioInfo,
+        speaking_speed: scenarioInfo.speaking_speed  // 传递语速设置
+      };
+
+      // 跳转到对话页
+      wx.switchTab({
+        url: '/pages/chat/chat'
       });
-    }, 500);
+
+    } catch (error) {
+      wx.hideLoading();
+      console.error('生成随机场景失败:', error);
+      wx.showToast({
+        title: '场景生成失败，请重试',
+        icon: 'none'
+      });
+    }
   },
 
   // 角色互换模式
@@ -295,7 +318,8 @@ Page({
       greeting: generatedGreeting,
       audioUrl: generatedAudioUrl,
       isCustom: true,
-      scenarioInfo: scenarioPreview
+      scenarioInfo: scenarioPreview,
+      speaking_speed: scenarioPreview.speaking_speed  // 传递语速设置
     };
 
     // 跳转到对话页

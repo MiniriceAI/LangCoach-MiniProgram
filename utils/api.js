@@ -146,6 +146,11 @@ const api = {
       method: 'POST',
       data: { scenario_info: scenarioInfo, user_input: userInput },
       timeout: 60000
+    }),
+    // 生成随机场景
+    random: () => request('/api/custom-scenario/random', {
+      method: 'POST',
+      timeout: 60000
     })
   },
 
