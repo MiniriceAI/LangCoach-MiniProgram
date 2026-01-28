@@ -165,15 +165,6 @@ const api = {
       data,
       timeout: 60000
     }),
-    // 新增：优化的语音对话接口（合并 STT + LLM + TTS）
-    audio: (filePath, sessionId, speaker) => uploadFile('/api/chat/audio', filePath, {
-      name: 'audio',
-      formData: {
-        session_id: sessionId,
-        speaker: speaker || 'Ceylia'
-      },
-      timeout: 120000
-    }),
     rate: (data) => request('/api/chat/rate', {
       method: 'POST',
       data
