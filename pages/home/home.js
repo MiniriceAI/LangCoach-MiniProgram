@@ -235,12 +235,15 @@ Page({
     });
   },
 
-  // 生成随机场景
-  generateRandomScenario() {
-    const randomIndex = Math.floor(Math.random() * this.randomScenarioExamples.length);
+  // 生成随机场景（弹窗中的随机按钮）
+  async generateRandomScenario() {
+    // 关闭输入弹窗
     this.setData({
-      customScenarioInput: this.randomScenarioExamples[randomIndex]
+      showCustomInputModal: false
     });
+
+    // 调用真正的随机场景生成
+    await this.startRandomScenario();
   },
 
   // 提交自定义场景
