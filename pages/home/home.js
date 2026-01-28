@@ -122,40 +122,33 @@ Page({
     }
   },
 
-  // 随机场景
+  // 随机场景（快速开始区域的随机挑战按钮）
   async startRandomScenario() {
     wx.showLoading({ title: '生成场景中...' });
 
     try {
-      // 调用API生成随机场景
-      const scenarioInfo = await api.customScenario.random();
-
-      // 生成场景prompt
-      const generateResult = await api.customScenario.generate(scenarioInfo, scenarioInfo.scenario_summary_cn);
+      // 调用API生成随机场景描述
+      const result = await api.customScenario.random();
 
       wx.hideLoading();
 
-      // 保存自定义场景配置
-      app.globalData.settings.scenario = {
-        scenario: generateResult.scenario_id,
-        title: scenarioInfo.scenario_summary_cn,
-        greeting: generateResult.greeting,
-        audioUrl: generateResult.audio_url,
-        isCustom: true,
-        scenarioInfo: scenarioInfo,
-        speaking_speed: scenarioInfo.speaking_speed  // 传递语速设置
-      };
+      // 显示自定义场景弹窗，并填充生成的场景描述
+      this.setData({
+        showCustomInputModal: true,
+        customScenarioInput: result.scenario_description
+      });
 
-      // 跳转到对话页
-      wx.switchTab({
-        url: '/pages/chat/chat'
+      wx.showToast({
+        title: '场景已生成，可编辑',
+        icon: 'success',
+        duration: 2000
       });
 
     } catch (error) {
       wx.hideLoading();
       console.error('生成随机场景失败:', error);
       wx.showToast({
-        title: '场景生成失败，请重试',
+        title: '生成失败，请重试',
         icon: 'none'
       });
     }
@@ -237,13 +230,33 @@ Page({
 
   // 生成随机场景（弹窗中的随机按钮）
   async generateRandomScenario() {
-    // 关闭输入弹窗
-    this.setData({
-      showCustomInputModal: false
-    });
+    wx.showLoading({ title: '生成场景中...' });
 
-    // 调用真正的随机场景生成
-    await this.startRandomScenario();
+    try {
+      // 调用API生成随机场景描述
+      const result = await api.customScenario.random();
+
+      wx.hideLoading();
+
+      // 填充到输入框中，让用户可以编辑
+      this.setData({
+        customScenarioInput: result.scenario_description
+      });
+
+      wx.showToast({
+        title: '场景已生成',
+        icon: 'success',
+        duration: 1500
+      });
+
+    } catch (error) {
+      wx.hideLoading();
+      console.error('生成随机场景失败:', error);
+      wx.showToast({
+        title: '生成失败，请重试',
+        icon: 'none'
+      });
+    }
   },
 
   // 提交自定义场景
