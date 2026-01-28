@@ -7,8 +7,13 @@
     <view class="scenario-info">
       <text class="scenario-title">{{scenarioTitle}}</text>
     </view>
-    <view class="turn-counter" wx:if="{{!isCustomScenario}}">{{currentTurn}}/{{maxTurns}}</view>
-    <view class="turn-counter" wx:else>自由对话</view>
+    <view class="header-right">
+      <view class="settings-btn" bindtap="showSessionSettings">
+        <text class="settings-icon">⚙️</text>
+      </view>
+      <view class="turn-counter" wx:if="{{!isCustomScenario}}">{{currentTurn}}/{{maxTurns}}</view>
+      <view class="turn-counter" wx:else>自由对话</view>
+    </view>
   </view>
 
   <!-- 消息列表 -->
@@ -240,6 +245,97 @@
         </view>
         <view class="exit-btn quit" bindtap="confirmExit">
           <text>直接退出</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 会话设置弹窗 -->
+  <view class="session-settings-overlay" wx:if="{{showSessionSettings}}" bindtap="hideSessionSettings">
+    <view class="session-settings-modal" catchtap="">
+      <view class="settings-header">
+        <text class="settings-title">对话设置</text>
+        <text class="settings-close" bindtap="hideSessionSettings">×</text>
+      </view>
+
+      <view class="settings-tip">
+        <text>相关设置修改后，将在下一次进入对话时生效</text>
+      </view>
+
+      <!-- 发音设置 -->
+      <view class="setting-section">
+        <view class="section-title">发音设置</view>
+        <view class="section-desc">仅支持对应发音色的人物性别，若使用的人物与有对应音色，则该设置无效</view>
+        <view class="voice-options">
+          <view
+            class="voice-option {{sessionSettings.speaker === item.code ? 'selected' : ''}}"
+            wx:for="{{voiceOptions}}"
+            wx:key="code"
+            data-voice="{{item.code}}"
+            bindtap="selectSessionVoice"
+          >
+            <text class="voice-name">{{item.name}}</text>
+            <text class="voice-desc">{{item.desc}}</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 语速设置 -->
+      <view class="setting-section">
+        <view class="section-title">语速设置</view>
+        <view class="speed-options">
+          <view
+            class="speed-option {{sessionSettings.speakingSpeed === 'slow' ? 'selected' : ''}}"
+            data-speed="slow"
+            bindtap="selectSpeakingSpeed"
+          >
+            <text>较慢</text>
+          </view>
+          <view
+            class="speed-option {{sessionSettings.speakingSpeed === 'medium' ? 'selected' : ''}}"
+            data-speed="medium"
+            bindtap="selectSpeakingSpeed"
+          >
+            <text>标准</text>
+          </view>
+          <view
+            class="speed-option {{sessionSettings.speakingSpeed === 'fast' ? 'selected' : ''}}"
+            data-speed="fast"
+            bindtap="selectSpeakingSpeed"
+          >
+            <text>较快</text>
+          </view>
+        </view>
+
+        <!-- 精确语速滑块 -->
+        <view class="speed-slider-container">
+          <view class="slider-label">
+            <text>精确调节</text>
+            <text class="slider-value">{{sessionSettings.speakingRatePercent}}%</text>
+          </view>
+          <slider
+            class="speed-slider"
+            min="-50"
+            max="100"
+            step="10"
+            value="{{sessionSettings.speakingRatePercent}}"
+            activeColor="#5B8FF9"
+            backgroundColor="#E8E8E8"
+            block-size="20"
+            bindchange="onSpeakingRateChange"
+            bindchanging="onSpeakingRateChanging"
+          />
+          <view class="slider-marks">
+            <text>1s</text>
+            <text>6s</text>
+          </view>
+        </view>
+      </view>
+
+      <!-- 保存按钮 -->
+      <view class="settings-actions">
+        <view class="settings-btn save" bindtap="saveSessionSettings">
+          <text>保存</text>
         </view>
       </view>
     </view>

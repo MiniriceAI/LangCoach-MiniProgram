@@ -48,7 +48,26 @@ Page({
     // 是否显示开场白播放提示
     showGreetingPlayTip: false,
     // 退出确认弹窗
-    showExitModal: false
+    showExitModal: false,
+    // 会话级别设置
+    showSessionSettings: false,
+    sessionSettings: {
+      speaker: '',  // 当前会话的语音角色
+      speakingSpeed: 'medium',  // 语速预设: slow/medium/fast
+      speakingRatePercent: 0,  // 精确语速百分比: -50 to 100
+      speakingRate: '+0%'  // 发送给服务器的语速字符串
+    },
+    // 语音选项
+    voiceOptions: [
+      { code: 'Ceylia', name: 'Ceylia', desc: '美式女声 - 友好' },
+      { code: 'Tifa', name: 'Tifa', desc: '美式女声 - 自然' },
+      { code: 'David', name: 'David', desc: '美式男声 - 温和' },
+      { code: 'Tony', name: 'Tony', desc: '美式男声 - 成熟' },
+      { code: 'Emma', name: 'Emma', desc: '英式女声 - 优雅' },
+      { code: 'Ryan', name: 'Ryan', desc: '英式男声 - 正式' },
+      { code: 'Sarah', name: 'Sarah', desc: '澳式女声 - 活泼' },
+      { code: 'William', name: 'William', desc: '澳式男声 - 友好' }
+    ]
   },
 
   // 录音管理器
@@ -122,6 +141,109 @@ Page({
 
   onUnload() {
     this.cleanup();
+  },
+
+  // ============================================
+  // 会话设置相关方法
+  // ============================================
+
+  // 显示会话设置弹窗
+  showSessionSettings() {
+    // 初始化会话设置（从全局设置或场景设置加载）
+    const globalVoice = app.globalData.settings.voice || 'Ceylia';
+    const scenarioSpeakingSpeed = this.data.scenario?.scenarioInfo?.speaking_speed || 'medium';
+
+    // 如果已有会话设置，使用会话设置；否则使用全局/场景设置
+    const currentSettings = this.data.sessionSettings.speaker ? this.data.sessionSettings : {
+      speaker: globalVoice,
+      speakingSpeed: scenarioSpeakingSpeed,
+      speakingRatePercent: this.getSpeakingRatePercent(scenarioSpeakingSpeed),
+      speakingRate: this.getSpeakingRateString(this.getSpeakingRatePercent(scenarioSpeakingSpeed))
+    };
+
+    this.setData({
+      showSessionSettings: true,
+      sessionSettings: currentSettings
+    });
+  },
+
+  // 隐藏会话设置弹窗
+  hideSessionSettings() {
+    this.setData({ showSessionSettings: false });
+  },
+
+  // 选择会话语音角色
+  selectSessionVoice(e) {
+    const voice = e.currentTarget.dataset.voice;
+    this.setData({
+      'sessionSettings.speaker': voice
+    });
+  },
+
+  // 选择语速预设
+  selectSpeakingSpeed(e) {
+    const speed = e.currentTarget.dataset.speed;
+    const ratePercent = this.getSpeakingRatePercent(speed);
+    this.setData({
+      'sessionSettings.speakingSpeed': speed,
+      'sessionSettings.speakingRatePercent': ratePercent,
+      'sessionSettings.speakingRate': this.getSpeakingRateString(ratePercent)
+    });
+  },
+
+  // 语速滑块变化中（实时显示）
+  onSpeakingRateChanging(e) {
+    const percent = e.detail.value;
+    this.setData({
+      'sessionSettings.speakingRatePercent': percent
+    });
+  },
+
+  // 语速滑块变化完成
+  onSpeakingRateChange(e) {
+    const percent = e.detail.value;
+    const rateString = this.getSpeakingRateString(percent);
+
+    // 根据百分比更新语速预设
+    let speed = 'medium';
+    if (percent < -10) speed = 'slow';
+    else if (percent > 10) speed = 'fast';
+
+    this.setData({
+      'sessionSettings.speakingRatePercent': percent,
+      'sessionSettings.speakingRate': rateString,
+      'sessionSettings.speakingSpeed': speed
+    });
+  },
+
+  // 将语速预设转换为百分比
+  getSpeakingRatePercent(speed) {
+    const map = {
+      'slow': -30,
+      'medium': 0,
+      'fast': 30
+    };
+    return map[speed] || 0;
+  },
+
+  // 将百分比转换为语速字符串
+  getSpeakingRateString(percent) {
+    if (percent >= 0) {
+      return `+${percent}%`;
+    }
+    return `${percent}%`;
+  },
+
+  // 保存会话设置
+  saveSessionSettings() {
+    wx.showToast({
+      title: '设置已保存',
+      icon: 'success',
+      duration: 1500
+    });
+    this.hideSessionSettings();
+
+    console.log('Session settings saved:', this.data.sessionSettings);
   },
 
   // 初始化录音管理器
@@ -293,6 +415,16 @@ Page({
       showGreetingPlayTip: false
     });
 
+    // 初始化会话设置（从场景或全局设置）
+    const scenarioSpeakingSpeed = scenario?.scenarioInfo?.speaking_speed || 'medium';
+    const globalVoice = app.globalData.settings.voice || 'Ceylia';
+    this.setData({
+      'sessionSettings.speaker': globalVoice,
+      'sessionSettings.speakingSpeed': scenarioSpeakingSpeed,
+      'sessionSettings.speakingRatePercent': this.getSpeakingRatePercent(scenarioSpeakingSpeed),
+      'sessionSettings.speakingRate': this.getSpeakingRateString(this.getSpeakingRatePercent(scenarioSpeakingSpeed))
+    });
+
     // 开始新会话
     this.startSession();
   },
@@ -313,7 +445,8 @@ Page({
         scenario: this.data.scenario,
         level: app.globalData.settings.level,
         turns: this.data.maxTurns,
-        speaker: app.globalData.settings.voice || 'Ceylia'  // 添加语音角色参数
+        speaker: this.data.sessionSettings.speaker || app.globalData.settings.voice || 'Ceylia',  // 优先使用会话设置
+        speaking_rate: this.data.sessionSettings.speakingRate || undefined  // 传递精确语速
       });
 
       console.log('Session started, full response:', response);
@@ -848,7 +981,8 @@ Page({
       const response = await api.chat.message({
         session_id: this.data.sessionId,
         message: text,
-        speaker: app.globalData.settings.voice || 'Ceylia'  // 使用用户选择的语音角色
+        speaker: this.data.sessionSettings.speaker || app.globalData.settings.voice || 'Ceylia',  // 优先使用会话设置
+        speaking_rate: this.data.sessionSettings.speakingRate || undefined  // 传递精确语速
       });
 
       console.log('AI response received:', JSON.stringify(response));
