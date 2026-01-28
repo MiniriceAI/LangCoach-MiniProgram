@@ -86,7 +86,27 @@ Page({
       this.setData({ audioPermissionGranted: true });
     } else {
       console.log('在真机中运行，需要检查音频播放权限');
+      // 尝试主动检测音频播放权限
+      this.detectAudioPermission();
     }
+  },
+
+  // 检测音频播放权限
+  detectAudioPermission() {
+    // 创建一个临时音频播放器测试权限
+    const testAudio = wx.createInnerAudioContext();
+    testAudio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+HwymMcBDyS2e/MdSEIL3v47lUCWZ2+eR==';
+    testAudio.volume = 0;
+    testAudio.onCanplay(() => {
+      console.log('音频权限检测：可以播放');
+      this.setData({ audioPermissionGranted: true });
+      testAudio.destroy();
+    });
+    testAudio.onError(() => {
+      console.log('音频权限检测：需要用户交互');
+      testAudio.destroy();
+    });
+    testAudio.play();
   },
 
   onShow() {
@@ -313,7 +333,8 @@ Page({
           role: 'assistant',
           content: greeting,
           audioUrl: audioUrl,
-          chatTips: chatTips  // 传递对话提示
+          chatTips: chatTips,  // 传递对话提示
+          showTips: chatTips && (chatTips.english || chatTips.chinese) && this.data.learningMode === 'prompt' // 开场白直接显示提示
         });
 
         // 如果有对话提示，显示提示
@@ -455,29 +476,60 @@ Page({
 
   // 开始录音
   startRecording() {
-    wx.authorize({
-      scope: 'scope.record',
-      success: () => {
-        this.recordingCancelled = false;
-        // 用户开始录音也视为交互，可以解锁音频播放权限
-        this.setData({ 
-          isRecording: true, 
-          recordingDuration: 0,
-          audioPermissionGranted: true,
-          showAudioTip: false,
-          showGreetingPlayTip: false
-        });
-        
-        // 如果有待播放的开场白音频，先播放它
-        this.playPendingGreetingAudio();
-        
-        this.recorderManager.start({
-          duration: 60000,
-          sampleRate: 16000,
-          numberOfChannels: 1,
-          encodeBitRate: 48000,
-          format: 'mp3'
-        });
+    // 检查录音权限
+    wx.getSetting({
+      success: (res) => {
+        if (res.authSetting['scope.record']) {
+          // 已授权，直接开始录音
+          this.doStartRecording();
+        } else {
+          // 请求录音权限
+          wx.authorize({
+            scope: 'scope.record',
+            success: () => {
+              this.doStartRecording();
+            },
+            fail: () => {
+              wx.showModal({
+                title: '权限提示',
+                content: '需要录音权限才能使用语音功能',
+                success: (res) => {
+                  if (res.confirm) {
+                    wx.openSetting();
+                  }
+                }
+              });
+            }
+          });
+        }
+      }
+    });
+  },
+
+  // 执行录音开始
+  doStartRecording() {
+    this.recordingCancelled = false;
+    // 用户开始录音也视为交互，可以解锁音频播放权限
+    this.setData({ 
+      isRecording: true, 
+      recordingDuration: 0,
+      audioPermissionGranted: true,
+      showAudioTip: false,
+      showGreetingPlayTip: false
+    });
+    
+    // 如果有待播放的开场白音频，先播放它
+    this.playPendingGreetingAudio();
+    
+    this.recorderManager.start({
+      duration: 60000,
+      sampleRate: 16000,
+      numberOfChannels: 1,
+      encodeBitRate: 48000,
+      format: 'mp3'
+    });
+    
+    this.startRecordingTimer();
       },
       fail: () => {
         wx.showModal({
@@ -982,7 +1034,7 @@ Page({
         return {
           ...msg,
           hideText: mode === 'listening',
-          showTips: false
+          showTips: mode === 'prompt' && msg.chatTips && (msg.chatTips.english || msg.chatTips.chinese) // 在提示模式下显示有提示的消息
         };
       }
       return msg;
@@ -1012,6 +1064,22 @@ Page({
       currentChatTips: chatTips,
       showChatTips: true
     });
+  },
+
+  // 点击开场白播放提示
+  onGreetingPlayTap() {
+    if (this.data.pendingGreetingAudio && this.data.pendingGreetingMsgId) {
+      this.setData({ 
+        audioPermissionGranted: true,
+        showGreetingPlayTip: false 
+      });
+      this.autoPlayAudio(this.data.pendingGreetingAudio, this.data.pendingGreetingMsgId);
+      // 清除待播放状态
+      this.setData({
+        pendingGreetingAudio: null,
+        pendingGreetingMsgId: null
+      });
+    }
   },
 
   // 隐藏对话提示
