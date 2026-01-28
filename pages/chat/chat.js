@@ -531,20 +531,6 @@ Page({
     });
     
     this.startRecordingTimer();
-      },
-      fail: () => {
-        wx.showModal({
-          title: '提示',
-          content: '需要录音权限才能使用语音功能',
-          confirmText: '去设置',
-          success: (res) => {
-            if (res.confirm) {
-              wx.openSetting();
-            }
-          }
-        });
-      }
-    });
   },
 
   // 停止录音
