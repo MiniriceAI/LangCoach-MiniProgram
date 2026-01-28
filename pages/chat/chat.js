@@ -880,6 +880,9 @@ Page({
   async handleVoiceMessage(filePath, duration) {
     // 用户发送新消息时，隐藏之前的对话提示
     this.hideAllChatTips();
+    
+    // ★ iOS关键：在用户交互时预先激活音频播放器
+    this.preActivateAudioPlayer();
 
     // 先添加用户语音消息（显示加载状态）
     const userMsgId = this.addMessage({
@@ -949,6 +952,9 @@ Page({
 
     // 用户发送新消息时，隐藏之前的对话提示
     this.hideAllChatTips();
+    
+    // ★ iOS关键：在用户交互时预先激活音频播放器
+    this.preActivateAudioPlayer();
 
     this.addMessage({
       role: 'user',
@@ -1114,6 +1120,94 @@ Page({
     }
   },
 
+  // ★ iOS关键：预先激活音频播放器
+  // 在用户交互时调用，创建并激活音频上下文
+  // 这样后续的播放就不需要用户交互了
+  preActivateAudioPlayer() {
+    console.log('=== 预激活音频播放器 (iOS) ===');
+    
+    // 标记已激活
+    this._audioActivated = true;
+    
+    // 如果已有播放器，先销毁
+    if (this.innerAudioContext) {
+      try {
+        this.innerAudioContext.destroy();
+      } catch (e) {
+        console.log('销毁旧音频上下文时出错:', e);
+      }
+    }
+    
+    // 创建新的音频上下文
+    this.innerAudioContext = wx.createInnerAudioContext({
+      useWebAudioImplement: true
+    });
+    this.innerAudioContext.obeyMuteSwitch = false;
+    this.innerAudioContext.volume = 1;
+    
+    // 标记等待播放
+    this._waitingForAudio = true;
+    this._audioReadyToPlay = false;
+    
+    const self = this;
+    
+    // 设置回调
+    this.innerAudioContext.onCanplay(() => {
+      console.log('音频可以播放');
+      self._audioReadyToPlay = true;
+      // 如果有待播放的消息ID，更新状态
+      if (self._pendingPlayMessageId) {
+        self.setData({ playingMessageId: self._pendingPlayMessageId });
+        self.updateMessagePlayingState(self._pendingPlayMessageId, true);
+      }
+    });
+    
+    this.innerAudioContext.onPlay(() => {
+      console.log('音频开始播放');
+      self.setData({ audioPermissionGranted: true, showAudioTip: false });
+    });
+    
+    this.innerAudioContext.onEnded(() => {
+      console.log('音频播放结束');
+      self._waitingForAudio = false;
+      if (self._pendingPlayMessageId) {
+        self.updateMessagePlayingState(self._pendingPlayMessageId, false);
+        self._pendingPlayMessageId = null;
+      }
+      self.setData({ playingMessageId: null });
+      
+      // 播放结束后显示对话提示
+      if (self._pendingChatTips && self.data.learningMode === 'prompt') {
+        self.showChatTipsForMessage(self._pendingMessageId, self._pendingChatTips);
+        self._pendingChatTips = null;
+        self._pendingMessageId = null;
+      }
+    });
+    
+    this.innerAudioContext.onError((err) => {
+      console.error('音频播放错误:', err);
+      self._waitingForAudio = false;
+      if (self._pendingPlayMessageId) {
+        self.updateMessagePlayingState(self._pendingPlayMessageId, false);
+        self._pendingPlayMessageId = null;
+      }
+      self.setData({ playingMessageId: null });
+    });
+    
+    // ★ 关键：使用一个极短的静音音频激活播放器
+    // 这个 base64 是一个极短的静音 WAV 文件
+    const silentAudio = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+    this.innerAudioContext.src = silentAudio;
+    
+    // 尝试播放静音音频来激活
+    try {
+      this.innerAudioContext.play();
+      console.log('静音音频已播放，音频播放器已激活');
+    } catch (e) {
+      console.log('激活播放失败:', e);
+    }
+  },
+
   // 自动播放AI回复音频
   autoPlayAudio(audioUrl, messageId, chatTips) {
     if (!audioUrl) {
@@ -1124,11 +1218,39 @@ Page({
     console.log('=== 自动播放音频 ===');
     console.log('音频URL:', audioUrl);
     console.log('消息ID:', messageId);
-    console.log('audioPermissionGranted:', this.data.audioPermissionGranted);
+    console.log('音频已激活:', this._audioActivated);
     
-    // 用户已经进行了交互（发送消息），应该可以播放
-    // 直接调用播放方法
-    this.directPlayAudio(audioUrl, messageId, chatTips);
+    // 确保使用完整的URL
+    const fullUrl = audioUrl.startsWith('http') ? audioUrl : `${app.globalData.baseUrl}${audioUrl}`;
+    
+    // 保存待播放信息
+    this._pendingPlayMessageId = messageId;
+    if (chatTips) {
+      this._pendingChatTips = chatTips;
+      this._pendingMessageId = messageId;
+    }
+    
+    // 更新UI状态
+    this.setData({ playingMessageId: messageId });
+    this.updateMessagePlayingState(messageId, true);
+    
+    // 如果有预激活的播放器，直接使用
+    if (this._audioActivated && this.innerAudioContext) {
+      console.log('使用预激活的播放器播放');
+      this.innerAudioContext.src = fullUrl;
+      // 播放器已经激活，直接播放
+      try {
+        this.innerAudioContext.play();
+      } catch (e) {
+        console.error('播放失败:', e);
+        // 回退到直接播放方法
+        this.directPlayAudio(fullUrl, messageId, chatTips);
+      }
+    } else {
+      // 没有预激活，使用直接播放方法
+      console.log('没有预激活的播放器，使用直接播放');
+      this.directPlayAudio(fullUrl, messageId, chatTips);
+    }
   },
 
   // 直接播放音频的方法
@@ -1324,6 +1446,10 @@ Page({
     if (this.innerAudioContext) {
       this.innerAudioContext.destroy();
     }
+    // 重置音频激活状态
+    this._audioActivated = false;
+    this._waitingForAudio = false;
+    this._pendingPlayMessageId = null;
   },
 
   // 给AI消息点赞/踩
