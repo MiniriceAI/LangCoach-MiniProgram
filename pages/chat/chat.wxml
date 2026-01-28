@@ -265,19 +265,20 @@
       <!-- 发音设置 -->
       <view class="setting-section">
         <view class="section-title">发音设置</view>
-        <view class="section-desc">仅支持对应发音色的人物性别，若使用的人物与有对应音色，则该设置无效</view>
-        <view class="voice-options">
-          <view
-            class="voice-option {{sessionSettings.speaker === item.code ? 'selected' : ''}}"
-            wx:for="{{voiceOptions}}"
-            wx:key="code"
-            data-voice="{{item.code}}"
-            bindtap="selectSessionVoice"
-          >
-            <text class="voice-name">{{item.name}}</text>
-            <text class="voice-desc">{{item.desc}}</text>
+        <scroll-view class="voice-scroll" scroll-y scroll-with-animation>
+          <view class="voice-options">
+            <view
+              class="voice-option {{sessionSettings.speaker === item.code ? 'selected' : ''}}"
+              wx:for="{{voiceOptions}}"
+              wx:key="code"
+              data-voice="{{item.code}}"
+              bindtap="selectSessionVoice"
+            >
+              <text class="voice-name">{{item.name}}</text>
+              <text class="voice-desc">{{item.desc}}</text>
+            </view>
           </view>
-        </view>
+        </scroll-view>
       </view>
 
       <!-- 语速设置 -->
