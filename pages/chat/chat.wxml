@@ -12,7 +12,6 @@
         <text class="settings-icon">⚙️</text>
       </view>
       <view class="turn-counter" wx:if="{{!isCustomScenario}}">{{currentTurn}}/{{maxTurns}}</view>
-      <view class="turn-counter" wx:else>自由对话</view>
     </view>
   </view>
 
@@ -254,8 +253,9 @@
   <view class="session-settings-overlay" wx:if="{{showSessionSettings}}" bindtap="hideSessionSettings">
     <view class="session-settings-modal" catchtap="">
       <view class="settings-header">
-        <text class="settings-title">对话设置</text>
         <text class="settings-close" bindtap="hideSessionSettings">×</text>
+        <text class="settings-title">对话设置</text>
+        <text class="settings-save" bindtap="saveSessionSettings">保存</text>
       </view>
 
       <view class="settings-tip">
@@ -265,20 +265,18 @@
       <!-- 发音设置 -->
       <view class="setting-section">
         <view class="section-title">发音设置</view>
-        <scroll-view class="voice-scroll" scroll-y scroll-with-animation>
-          <view class="voice-options">
-            <view
-              class="voice-option {{sessionSettings.speaker === item.code ? 'selected' : ''}}"
-              wx:for="{{voiceOptions}}"
-              wx:key="code"
-              data-voice="{{item.code}}"
-              bindtap="selectSessionVoice"
-            >
-              <text class="voice-name">{{item.name}}</text>
-              <text class="voice-desc">{{item.desc}}</text>
-            </view>
+        <view class="voice-grid">
+          <view
+            class="voice-grid-item {{sessionSettings.speaker === item.code ? 'selected' : ''}}"
+            wx:for="{{voiceOptions}}"
+            wx:key="code"
+            data-voice="{{item.code}}"
+            bindtap="selectSessionVoice"
+          >
+            <text class="voice-grid-name">{{item.name}}</text>
+            <text class="voice-grid-desc">{{item.desc}}</text>
           </view>
-        </scroll-view>
+        </view>
       </view>
 
       <!-- 语速设置 -->
@@ -330,13 +328,6 @@
             <text>1s</text>
             <text>6s</text>
           </view>
-        </view>
-      </view>
-
-      <!-- 保存按钮 -->
-      <view class="settings-actions">
-        <view class="settings-btn save" bindtap="saveSessionSettings">
-          <text>保存</text>
         </view>
       </view>
     </view>

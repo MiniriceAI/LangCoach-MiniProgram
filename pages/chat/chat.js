@@ -241,7 +241,11 @@ Page({
       icon: 'success',
       duration: 1500
     });
-    this.hideSessionSettings();
+
+    // 延迟关闭弹窗，让用户看到保存提示
+    setTimeout(() => {
+      this.hideSessionSettings();
+    }, 500);
 
     console.log('Session settings saved:', this.data.sessionSettings);
   },

@@ -830,22 +830,35 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 30rpx;
-}
-
-.settings-title {
-  font-size: 36rpx;
-  font-weight: 600;
-  color: #FFFFFF;
+  padding: 0 10rpx;
 }
 
 .settings-close {
   font-size: 48rpx;
   color: rgba(255, 255, 255, 0.6);
   line-height: 1;
-  padding: 0 10rpx;
+  width: 80rpx;
+  text-align: left;
 }
 
-.settings-close:active {
+.settings-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+  flex: 1;
+  text-align: center;
+}
+
+.settings-save {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #5B8FF9;
+  width: 80rpx;
+  text-align: right;
+}
+
+.settings-close:active,
+.settings-save:active {
   opacity: 0.7;
 }
 
@@ -880,49 +893,44 @@
   line-height: 1.4;
 }
 
-/* 语音选项滚动容器 */
-.voice-scroll {
-  max-height: 300rpx;
-  margin-bottom: 10rpx;
+/* 语音网格布局 */
+.voice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16rpx;
 }
 
-/* 语音选项 */
-.voice-options {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
-  padding-right: 10rpx;
-}
-
-.voice-option {
-  padding: 20rpx;
+.voice-grid-item {
+  padding: 24rpx 20rpx;
   background: rgba(255, 255, 255, 0.05);
   border: 2rpx solid rgba(255, 255, 255, 0.1);
   border-radius: 12rpx;
   display: flex;
   flex-direction: column;
-  gap: 6rpx;
+  align-items: center;
+  gap: 8rpx;
   transition: all 0.2s;
 }
 
-.voice-option:active {
+.voice-grid-item:active {
   opacity: 0.8;
 }
 
-.voice-option.selected {
+.voice-grid-item.selected {
   background: rgba(91, 143, 249, 0.2);
   border-color: #5B8FF9;
 }
 
-.voice-name {
-  font-size: 26rpx;
+.voice-grid-name {
+  font-size: 28rpx;
   font-weight: 500;
   color: #FFFFFF;
 }
 
-.voice-desc {
+.voice-grid-desc {
   font-size: 22rpx;
   color: rgba(255, 255, 255, 0.6);
+  text-align: center;
 }
 
 /* 语速选项 */
@@ -1021,4 +1029,9 @@
 .settings-btn.save:active {
   opacity: 0.8;
   transform: scale(0.98);
+}
+
+/* 移除保存按钮区域（已移到 header） */
+.settings-actions {
+  display: none;
 }
