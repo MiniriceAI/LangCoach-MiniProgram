@@ -7,12 +7,16 @@
       <text wx:else class="audio-icon {{playing ? 'playing' : ''}}">{{playing ? '🔊' : '🎵'}}</text>
     </view>
     <text class="duration">{{duration || 0}}"</text>
-    <view wx:if="{{role === 'user'}}" class="voice-indicator">
-      <text class="voice-bars {{playing ? 'playing' : ''}}">
-        <text class="bar"></text>
-        <text class="bar"></text>
-        <text class="bar"></text>
-      </text>
+    
+    <!-- 语音波形指示器 -->
+    <view class="voice-indicator">
+      <view class="voice-bars {{playing ? 'playing' : ''}}">
+        <view class="bar"></view>
+        <view class="bar"></view>
+        <view class="bar"></view>
+        <view class="bar"></view>
+        <view class="bar"></view>
+      </view>
     </view>
   </view>
 

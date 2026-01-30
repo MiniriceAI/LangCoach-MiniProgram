@@ -485,6 +485,7 @@ Page({
           role: 'assistant',
           content: greeting,
           audioUrl: audioUrl,
+          duration: 0, // 添加默认 duration 值
           chatTips: chatTips,  // 传递对话提示
           showTips: chatTips && (chatTips.english || chatTips.chinese) && this.data.learningMode === 'prompt' // 开场白直接显示提示
         });
@@ -554,7 +555,8 @@ Page({
       // 添加模拟开场白（但标记会话未就绪）
       this.addMessage({
         role: 'assistant',
-        content: this.getDefaultGreeting()
+        content: this.getDefaultGreeting(),
+        duration: 0 // 添加默认 duration 值
       });
     }
   },
@@ -888,7 +890,7 @@ Page({
     const userMsgId = this.addMessage({
       role: 'user',
       audioUrl: filePath,
-      duration: Math.ceil(duration / 1000),
+      duration: duration ? Math.ceil(duration / 1000) : 0,
       transcribing: true
     });
 
@@ -958,7 +960,8 @@ Page({
 
     this.addMessage({
       role: 'user',
-      content: text
+      content: text,
+      duration: 0 // 添加默认 duration 值
     });
 
     this.setData({ inputText: '' });
@@ -1012,6 +1015,7 @@ Page({
         role: 'assistant',
         content: response.reply,
         audioUrl: response.audio_url,
+        duration: 0, // 添加默认 duration 值
         feedback: response.feedback,
         chatTips: response.chat_tips,
         // 听力模式下隐藏文本
@@ -1051,7 +1055,8 @@ Page({
       // 模拟回复
       this.addMessage({
         role: 'assistant',
-        content: "I understand. Could you tell me more about that?"
+        content: "I understand. Could you tell me more about that?",
+        duration: 0 // 添加默认 duration 值
       });
     }
   },
@@ -1062,6 +1067,7 @@ Page({
     const newMessage = {
       id,
       timestamp: Date.now(),
+      duration: 0, // 确保每个消息都有默认的 duration
       ...message
     };
 

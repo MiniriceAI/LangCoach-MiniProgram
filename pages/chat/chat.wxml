@@ -153,6 +153,15 @@
           bindtouchcancel="{{sessionReady ? 'onTouchEnd' : ''}}"
           bindtap="{{!sessionReady ? 'onSessionNotReady' : ''}}"
         >
+          <view wx:if="{{isRecording}}" class="recording-waves">
+            <view class="recording-wave"></view>
+            <view class="recording-wave"></view>
+            <view class="recording-wave"></view>
+            <view class="recording-wave"></view>
+            <view class="recording-wave"></view>
+            <view class="recording-wave"></view>
+            <view class="recording-wave"></view>
+          </view>
           <text>{{!sessionReady ? '连接中...' : (isRecording ? (isCancelArea ? '松开取消' : '松开发送') : '按住说话')}}</text>
         </view>
       </view>

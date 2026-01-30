@@ -213,6 +213,40 @@ page {
   40% { transform: scale(1); }
 }
 
+/* 音频波浪纹动画 */
+.audio-waves {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3rpx;
+}
+
+.audio-wave {
+  width: 4rpx;
+  background: linear-gradient(to top, #6366f1, #8b5cf6);
+  border-radius: 2rpx;
+  animation: audio-wave 1.2s ease-in-out infinite;
+}
+
+.audio-wave:nth-child(1) { height: 12rpx; animation-delay: 0s; }
+.audio-wave:nth-child(2) { height: 16rpx; animation-delay: 0.15s; }
+.audio-wave:nth-child(3) { height: 24rpx; animation-delay: 0.3s; }
+.audio-wave:nth-child(4) { height: 32rpx; animation-delay: 0.45s; }
+.audio-wave:nth-child(5) { height: 28rpx; animation-delay: 0.6s; }
+.audio-wave:nth-child(6) { height: 20rpx; animation-delay: 0.75s; }
+.audio-wave:nth-child(7) { height: 16rpx; animation-delay: 0.9s; }
+
+@keyframes audio-wave {
+  0%, 100% { 
+    transform: scaleY(0.3);
+    opacity: 0.7;
+  }
+  50% { 
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
 /* 空状态 */
 .empty-state {
   display: flex;
