@@ -1,6 +1,8 @@
 .container {
   padding: 30rpx;
   padding-bottom: 180rpx;
+  background: var(--bg-color);
+  min-height: 100vh;
 }
 
 /* 顶部区域 */
@@ -66,25 +68,27 @@
 
 .progress-bar {
   height: 12rpx;
-  background: #E8E8E8;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 6rpx;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #4A90D9 0%, #52C41A 100%);
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
   border-radius: 6rpx;
   transition: width 0.3s ease;
 }
 
 /* 每日挑战卡片 */
 .daily-challenge {
-  background: linear-gradient(135deg, #4A90D9 0%, #3A7BC8 100%);
+  background: linear-gradient(135deg, #2d2d5a 0%, #3d3d7a 100%);
   color: #FFFFFF;
   padding: 30rpx;
   position: relative;
   overflow: hidden;
+  border: 1rpx solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
 }
 
 .daily-challenge::before {
@@ -398,11 +402,13 @@
 }
 
 .modal-content {
-  background: #FFFFFF;
+  background: linear-gradient(145deg, #2d2d5a 0%, #3d3d7a 100%);
   border-radius: 32rpx 32rpx 0 0;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
+  border: 1rpx solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
 }
 
 /* 自定义场景输入弹窗 */
@@ -415,7 +421,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 30rpx;
-  border-bottom: 1rpx solid #E8E8E8;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.15);
 }
 
 .modal-cancel {
@@ -426,7 +432,7 @@
 .modal-title {
   font-size: 34rpx;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #FFFFFF;
 }
 
 .modal-confirm {
@@ -456,12 +462,14 @@
 .custom-input-textarea {
   width: 100%;
   height: 200rpx;
-  background: #F5F7FA;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 16rpx;
   padding: 24rpx;
   font-size: 30rpx;
   line-height: 1.6;
   box-sizing: border-box;
+  color: #FFFFFF;
+  border: 1rpx solid rgba(255, 255, 255, 0.15);
 }
 
 .input-counter {
@@ -477,7 +485,7 @@
   justify-content: center;
   margin-top: 30rpx;
   padding: 24rpx;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   border-radius: 40rpx;
   color: #FFFFFF;
   font-size: 32rpx;
@@ -490,8 +498,9 @@
 }
 
 .confirm-scenario-btn.disabled {
-  background: #E8E8E8;
-  color: var(--text-hint);
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.5);
+  border: 1rpx solid rgba(255, 255, 255, 0.15);
 }
 
 .confirm-scenario-btn.disabled:active {
@@ -581,13 +590,13 @@
   display: block;
   font-size: 34rpx;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #FFFFFF;
   margin-bottom: 8rpx;
 }
 
 .preview-subtitle {
   font-size: 26rpx;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .preview-task-badge {
@@ -605,15 +614,16 @@
 }
 
 .preview-task-desc {
-  background: rgba(102, 126, 234, 0.1);
+  background: rgba(99, 102, 241, 0.2);
   padding: 20rpx;
   border-radius: 12rpx;
   margin-bottom: 24rpx;
+  border: 1rpx solid rgba(99, 102, 241, 0.3);
 }
 
 .preview-task-desc text {
   font-size: 26rpx;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.9);
   line-height: 1.6;
 }
 
@@ -625,18 +635,19 @@
 
 .role-item {
   flex: 1;
-  background: #F5F7FA;
+  background: rgba(255, 255, 255, 0.1);
   padding: 20rpx;
   border-radius: 16rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.15);
 }
 
 .role-label {
   display: block;
   font-size: 22rpx;
-  color: var(--primary-color);
+  color: #6366f1;
   margin-bottom: 8rpx;
   padding: 4rpx 12rpx;
-  background: rgba(102, 126, 234, 0.15);
+  background: rgba(99, 102, 241, 0.2);
   border-radius: 8rpx;
   display: inline-block;
 }
@@ -645,14 +656,14 @@
   display: block;
   font-size: 28rpx;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #FFFFFF;
   margin-top: 12rpx;
 }
 
 .role-value-en {
   display: block;
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
   margin-top: 4rpx;
 }
 
@@ -664,21 +675,21 @@
   display: block;
   font-size: 28rpx;
   font-weight: 600;
-  color: var(--primary-color);
+  color: #6366f1;
   margin-bottom: 12rpx;
 }
 
 .section-content {
   display: block;
   font-size: 28rpx;
-  color: var(--text-primary);
+  color: #FFFFFF;
   line-height: 1.6;
 }
 
 .section-content-en {
   display: block;
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
   margin-top: 8rpx;
   line-height: 1.5;
 }
@@ -693,21 +704,22 @@
 .setting-item {
   display: flex;
   align-items: center;
-  background: #F5F7FA;
+  background: rgba(255, 255, 255, 0.1);
   padding: 12rpx 20rpx;
   border-radius: 20rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.15);
 }
 
 .setting-label {
   font-size: 24rpx;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
   margin-right: 12rpx;
 }
 
 .setting-value {
   font-size: 24rpx;
   font-weight: 500;
-  color: var(--text-primary);
+  color: #FFFFFF;
 }
 
 .setting-value.easy {

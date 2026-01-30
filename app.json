@@ -7,16 +7,16 @@
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#4A90D9",
+    "navigationBarBackgroundColor": "#1a1a3e",
     "navigationBarTitleText": "LangCoach",
     "navigationBarTextStyle": "white",
-    "backgroundColor": "#F5F7FA"
+    "backgroundColor": "#1a1a3e"
   },
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#4A90D9",
-    "backgroundColor": "#FFFFFF",
-    "borderStyle": "white",
+    "color": "rgba(255, 255, 255, 0.6)",
+    "selectedColor": "#6366f1",
+    "backgroundColor": "#2d2d5a",
+    "borderStyle": "black",
     "list": [
       {
         "pagePath": "pages/home/home",
@@ -32,7 +32,7 @@
       },
       {
         "pagePath": "pages/review/review",
-        "text": "复习",
+        "text": "报告",
         "iconPath": "images/tab-review.png",
         "selectedIconPath": "images/tab-review-active.png"
       },
