@@ -34,42 +34,67 @@ Page({
 
   // 加载学习报告
   async loadReports() {
-    // 直接使用本地数据，API端点暂未实现
-    const localReports = wx.getStorageSync('reports') || [];
-    this.setData({
-      reports: localReports.length ? localReports : this.getMockReports(),
-      isEmpty: !localReports.length
-    });
+    try {
+      // Fetch conversation history from backend
+      const response = await api.history.getConversations(20, 0);
+
+      if (response && response.conversations) {
+        // Map backend data to display format
+        const reports = response.conversations.map(conv => ({
+          id: conv.id,
+          date: this.formatBackendDate(conv.date),
+          scenario: this.formatScenarioName(conv.scenario),
+          duration: conv.duration || 0,
+          scores: {
+            grammar: conv.overall_score || 0,
+            fluency: conv.overall_score || 0
+          },
+          overallScore: conv.overall_score || 0,
+          turns: conv.turns || 0,
+          maxTurns: conv.max_turns || 0,
+          tips: []
+        }));
+
+        this.setData({
+          reports: reports,
+          isEmpty: reports.length === 0
+        });
+      } else {
+        this.setData({
+          reports: [],
+          isEmpty: true
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load reports:', error);
+      // Fallback to empty state
+      this.setData({
+        reports: [],
+        isEmpty: true
+      });
+      wx.showToast({
+        title: '加载失败',
+        icon: 'none'
+      });
+    }
   },
 
-  // 模拟报告数据
-  getMockReports() {
-    return [
-      {
-        id: '1',
-        date: '2024-01-15',
-        scenario: 'Job Interview',
-        duration: 8,
-        scores: {
-          grammar: 85,
-          fluency: 82
-        },
-        overallScore: 84,
-        tips: ['尝试使用更复杂的句式', '回答更加自信！']
-      },
-      {
-        id: '2',
-        date: '2024-01-14',
-        scenario: 'Hotel Checkin',
-        duration: 15,
-        scores: {
-          grammar: 90,
-          fluency: 88
-        },
-        overallScore: 89,
-        tips: ['回答更加自信了', '注意时态的一致性']
-      }
-    ];
+  // Format backend date to display format
+  formatBackendDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return `${date.getMonth() + 1}月${date.getDate()}日`;
+  },
+
+  // Format scenario name for display
+  formatScenarioName(scenario) {
+    const nameMap = {
+      'job_interview': 'Job Interview',
+      'hotel_checkin': 'Hotel Check-in',
+      'salary_negotiation': 'Salary Negotiation',
+      'renting': 'Renting Apartment'
+    };
+    return nameMap[scenario] || scenario.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   },
 
   // 查看报告详情
@@ -78,7 +103,7 @@ Page({
     const report = this.data.reports.find(r => r.id === id);
     if (report) {
       wx.navigateTo({
-        url: `/pages/report-detail/report-detail?id=${id}`
+        url: `/pages/history-detail/history-detail?id=${id}`
       });
     }
   },

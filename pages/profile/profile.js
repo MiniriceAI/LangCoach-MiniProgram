@@ -48,14 +48,6 @@ Page({
       { code: 'Ryan', name: 'Ryan', desc: '英式男声 - 正式' },
       { code: 'Sarah', name: 'Sarah', desc: '澳式女声 - 活泼' },
       { code: 'William', name: 'William', desc: '澳式男声 - 友好' }
-    ],
-    // 成就列表
-    achievements: [
-      { id: 'first_chat', name: '初次对话', icon: '💬', unlocked: true },
-      { id: 'streak_7', name: '连续7天', icon: '🔥', unlocked: false },
-      { id: 'words_100', name: '百词斩', icon: '📚', unlocked: false },
-      { id: 'perfect_score', name: '满分达人', icon: '⭐', unlocked: false },
-      { id: 'early_bird', name: '早起鸟', icon: '🌅', unlocked: false }
     ]
   },
 
@@ -63,7 +55,6 @@ Page({
     this.loadUserInfo();
     this.loadSettings();
     this.loadStats();
-    this.calculateCacheSize();
   },
 
   onShow() {
@@ -84,9 +75,7 @@ Page({
     this.setData({
       currentLevel: settings.level || 'B1',
       currentTurns: settings.turns || 20,
-      currentVoice: settings.voice || 'Ceylia',  // 加载语音设置
-      autoPlayAudio: wx.getStorageSync('autoPlayAudio') !== false,
-      enableReminder: wx.getStorageSync('enableReminder') === true
+      currentVoice: settings.voice || 'Ceylia'
     });
   },
 
@@ -98,34 +87,24 @@ Page({
     });
   },
 
-  // 计算缓存大小
-  calculateCacheSize() {
-    wx.getStorageInfo({
-      success: (res) => {
-        const sizeKB = res.currentSize;
-        let sizeStr = '';
-        if (sizeKB < 1024) {
-          sizeStr = `${sizeKB} KB`;
-        } else {
-          sizeStr = `${(sizeKB / 1024).toFixed(1)} MB`;
-        }
-        this.setData({ cacheSize: sizeStr });
-      }
-    });
-  },
-
   // 登录
   handleLogin() {
     wx.getUserProfile({
       desc: '用于完善用户资料',
-      success: (res) => {
+      success: async (res) => {
         const userInfo = res.userInfo;
         this.setData({ userInfo });
         wx.setStorageSync('userInfo', userInfo);
         app.globalData.userInfo = userInfo;
 
-        // 调用后端登录
-        app.login().catch(console.error);
+        // 调用后端登录，传递用户信息
+        try {
+          await app.login(userInfo);
+          wx.showToast({ title: '登录成功', icon: 'success' });
+        } catch (error) {
+          console.error('Login failed:', error);
+          wx.showToast({ title: '登录失败', icon: 'none' });
+        }
       },
       fail: () => {
         wx.showToast({ title: '登录取消', icon: 'none' });
@@ -194,67 +173,6 @@ Page({
     });
     app.saveSettings({ voice });
     wx.showToast({ title: '语音已更新', icon: 'success' });
-  },
-
-  // 切换自动播放
-  toggleAutoPlay(e) {
-    const value = e.detail.value;
-    this.setData({ autoPlayAudio: value });
-    wx.setStorageSync('autoPlayAudio', value);
-  },
-
-  // 切换学习提醒
-  toggleReminder(e) {
-    const value = e.detail.value;
-    if (value) {
-      wx.requestSubscribeMessage({
-        tmplIds: ['your-template-id'],
-        success: () => {
-          this.setData({ enableReminder: true });
-          wx.setStorageSync('enableReminder', true);
-        },
-        fail: () => {
-          this.setData({ enableReminder: false });
-          wx.showToast({ title: '需要授权通知权限', icon: 'none' });
-        }
-      });
-    } else {
-      this.setData({ enableReminder: false });
-      wx.setStorageSync('enableReminder', false);
-    }
-  },
-
-  // 清除缓存
-  clearCache() {
-    wx.showModal({
-      title: '清除缓存',
-      content: '确定要清除所有缓存数据吗？这不会删除你的学习记录。',
-      success: (res) => {
-        if (res.confirm) {
-          // 保留重要数据
-          const userInfo = wx.getStorageSync('userInfo');
-          const token = wx.getStorageSync('token');
-          const stats = wx.getStorageSync('stats');
-          const settings = wx.getStorageSync('settings');
-
-          wx.clearStorageSync();
-
-          // 恢复重要数据
-          if (userInfo) wx.setStorageSync('userInfo', userInfo);
-          if (token) wx.setStorageSync('token', token);
-          if (stats) wx.setStorageSync('stats', stats);
-          if (settings) wx.setStorageSync('settings', settings);
-
-          this.calculateCacheSize();
-          wx.showToast({ title: '清除成功', icon: 'success' });
-        }
-      }
-    });
-  },
-
-  // 查看所有成就
-  viewAllAchievements() {
-    wx.showToast({ title: '功能开发中', icon: 'none' });
   },
 
   // 关于页面

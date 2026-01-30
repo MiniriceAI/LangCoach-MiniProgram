@@ -1,0 +1,94 @@
+<view class="container">
+  <!-- Loading state -->
+  <view wx:if="{{loading}}" class="loading-container">
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- Content -->
+  <view wx:else class="content">
+    <!-- Header Card -->
+    <view class="card header-card">
+      <view class="scenario-name">{{scenario}}</view>
+      <view class="meta-info">
+        <text class="date">{{date}}</text>
+      </view>
+      <view class="stats-row">
+        <view class="stat-item">
+          <text class="stat-label">时长</text>
+          <text class="stat-value">{{duration}}分钟</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-label">轮数</text>
+          <text class="stat-value">{{turns}}/{{maxTurns}}</text>
+        </view>
+        <view class="stat-item" wx:if="{{overallScore}}">
+          <text class="stat-label">得分</text>
+          <text class="stat-value" style="color: {{getScoreColor(overallScore)}}">{{overallScore}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Custom Scenario Details -->
+    <view wx:if="{{hasCustomScenario && customScenario}}" class="card scenario-card">
+      <view class="section-title">场景详情</view>
+
+      <view class="detail-item">
+        <view class="detail-label">AI 角色</view>
+        <view class="detail-value">{{customScenario.ai_role}}</view>
+        <view class="detail-value-cn">{{customScenario.ai_role_cn}}</view>
+      </view>
+
+      <view class="detail-item">
+        <view class="detail-label">你的角色</view>
+        <view class="detail-value">{{customScenario.user_role}}</view>
+        <view class="detail-value-cn">{{customScenario.user_role_cn}}</view>
+      </view>
+
+      <view class="detail-item">
+        <view class="detail-label">对话目标</view>
+        <view class="detail-value">{{customScenario.goal}}</view>
+        <view class="detail-value-cn">{{customScenario.goal_cn}}</view>
+      </view>
+
+      <view class="detail-item">
+        <view class="detail-label">挑战点</view>
+        <view class="detail-value">{{customScenario.challenge}}</view>
+        <view class="detail-value-cn">{{customScenario.challenge_cn}}</view>
+      </view>
+    </view>
+
+    <!-- Greeting -->
+    <view wx:if="{{greeting}}" class="card greeting-card">
+      <view class="section-title">开场白</view>
+      <view class="greeting-text">{{greeting}}</view>
+    </view>
+
+    <!-- Statistics Summary -->
+    <view class="card stats-card">
+      <view class="section-title">统计信息</view>
+      <view class="stats-grid">
+        <view class="stats-item">
+          <text class="stats-label">总轮数</text>
+          <text class="stats-number">{{turns}}</text>
+        </view>
+        <view class="stats-item">
+          <text class="stats-label">时长</text>
+          <text class="stats-number">{{duration}}分</text>
+        </view>
+        <view class="stats-item" wx:if="{{rating}}">
+          <text class="stats-label">评分</text>
+          <text class="stats-number">{{rating}}⭐</text>
+        </view>
+        <view class="stats-item" wx:if="{{overallScore}}">
+          <text class="stats-label">得分</text>
+          <text class="stats-number" style="color: {{getScoreColor(overallScore)}}">{{overallScore}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Empty state if no custom scenario -->
+    <view wx:if="{{!hasCustomScenario}}" class="empty-hint">
+      <text class="hint-text">这是一个预设场景对话</text>
+    </view>
+  </view>
+</view>

@@ -29,7 +29,7 @@ const BASE_URL = 'https://www.minirice.xyz';  // 生产环境
  */
 function request(url, options = {}) {
   return new Promise((resolve, reject) => {
-    const token = app?.globalData?.sessionId || wx.getStorageSync('token');
+    const token = app?.globalData?.sessionId || wx.getStorageSync('authToken');
 
     wx.request({
       url: `${BASE_URL}${url}`,
@@ -63,9 +63,11 @@ function request(url, options = {}) {
  * 处理未授权
  */
 function handleUnauthorized() {
-  wx.removeStorageSync('token');
+  wx.removeStorageSync('authToken');
+  wx.removeStorageSync('userInfo');
   if (app?.globalData) {
     app.globalData.sessionId = null;
+    app.globalData.userInfo = null;
   }
   wx.showToast({
     title: '请重新登录',
@@ -82,7 +84,7 @@ function handleUnauthorized() {
  */
 function uploadFile(url, filePath, options = {}) {
   return new Promise((resolve, reject) => {
-    const token = app?.globalData?.sessionId || wx.getStorageSync('token');
+    const token = app?.globalData?.sessionId || wx.getStorageSync('authToken');
 
     wx.uploadFile({
       url: `${BASE_URL}${url}`,
@@ -121,10 +123,11 @@ const api = {
 
   // 认证相关
   auth: {
-    wechatLogin: (code) => request('/api/auth/wechat', {
+    wechatLogin: (loginData) => request('/api/auth/wechat', {
       method: 'POST',
-      data: { code }
-    })
+      data: loginData
+    }),
+    getUserProfile: () => request('/api/auth/me')
   },
 
   // 场景相关
@@ -192,6 +195,17 @@ const api = {
   // TTS 语音角色
   speakers: {
     list: () => request('/api/speakers')
+  },
+
+  // 历史记录相关
+  history: {
+    // 获取对话历史列表
+    getConversations: (limit = 20, offset = 0) => request('/api/history/conversations', {
+      method: 'GET',
+      data: { limit, offset }
+    }),
+    // 获取对话详情
+    getConversationDetail: (conversationId) => request(`/api/history/conversations/${conversationId}`)
   }
 };
 
