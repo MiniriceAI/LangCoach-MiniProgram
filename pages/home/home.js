@@ -29,7 +29,9 @@ Page({
     isExtractingScenario: false,
     generatedScenarioId: null,
     generatedGreeting: null,
-    generatedAudioUrl: null
+    generatedAudioUrl: null,
+    // 防抖标识
+    isNavigating: false
   },
 
   // 随机场景示例
@@ -54,6 +56,8 @@ Page({
 
   onShow() {
     this.refreshStats();
+    // 重置导航状态，防止异常状态锁定
+    this.setData({ isNavigating: false });
   },
 
   loadUserData() {
@@ -188,11 +192,50 @@ Page({
 
   // 跳转到对话页
   navigateToChat(params) {
+    // 防抖：如果正在导航，忽略后续点击
+    if (this.data.isNavigating) {
+      console.log('正在导航中，忽略重复点击');
+      return;
+    }
+
+    // 设置导航状态
+    this.setData({ isNavigating: true });
+
     // 保存场景配置
     app.globalData.settings.scenario = params;
-    wx.switchTab({
-      url: '/pages/chat/chat'
-    });
+    
+    console.log('场景数据已保存:', params);
+    
+    // 使用setTimeout确保数据保存完成后再跳转
+    setTimeout(() => {
+      wx.switchTab({
+        url: '/pages/chat/chat',
+        success: () => {
+          console.log('成功跳转到对话页面');
+          this.setData({ isNavigating: false });
+        },
+        fail: (error) => {
+          console.error('跳转到对话页面失败:', error);
+          // 再次重试
+          setTimeout(() => {
+            wx.switchTab({
+              url: '/pages/chat/chat',
+              success: () => {
+                console.log('重试跳转成功');
+                this.setData({ isNavigating: false });
+              },
+              fail: () => {
+                wx.showToast({
+                  title: '跳转失败，请重试',
+                  icon: 'none'
+                });
+                this.setData({ isNavigating: false });
+              }
+            });
+          }, 200);
+        }
+      });
+    }, 50);
   },
 
   // 查看更多场景
@@ -315,6 +358,12 @@ Page({
 
   // 开始自定义场景对话
   startCustomScenarioChat() {
+    // 防抖：如果正在导航，忽略后续点击
+    if (this.data.isNavigating) {
+      console.log('正在导航中，忽略重复点击');
+      return;
+    }
+
     const { generatedScenarioId, generatedGreeting, generatedAudioUrl, scenarioPreview, customScenarioInput } = this.data;
 
     if (!generatedScenarioId) {
@@ -322,13 +371,11 @@ Page({
       return;
     }
 
-    // 隐藏弹窗
-    this.setData({
-      showScenarioPreviewModal: false
-    });
+    // 设置导航状态
+    this.setData({ isNavigating: true });
 
     // 保存自定义场景配置
-    app.globalData.settings.scenario = {
+    const scenarioData = {
       scenario: generatedScenarioId,
       title: customScenarioInput,
       greeting: generatedGreeting,
@@ -337,10 +384,44 @@ Page({
       scenarioInfo: scenarioPreview,
       speaking_speed: scenarioPreview.speaking_speed  // 传递语速设置
     };
+    
+    app.globalData.settings.scenario = scenarioData;
+    
+    console.log('自定义场景数据已保存:', scenarioData);
 
-    // 跳转到对话页
-    wx.switchTab({
-      url: '/pages/chat/chat'
+    // 隐藏弹窗，并在回调中执行跳转
+    this.setData({
+      showScenarioPreviewModal: false
+    }, () => {
+      // 在setData回调中执行跳转，确保状态更新完成
+      wx.switchTab({
+        url: '/pages/chat/chat',
+        success: () => {
+          console.log('成功跳转到对话页面');
+          // 重置导航状态
+          this.setData({ isNavigating: false });
+        },
+        fail: (error) => {
+          console.error('跳转到对话页面失败:', error);
+          // 再次重试
+          setTimeout(() => {
+            wx.switchTab({
+              url: '/pages/chat/chat',
+              success: () => {
+                console.log('重试跳转成功');
+                this.setData({ isNavigating: false });
+              },
+              fail: () => {
+                wx.showToast({
+                  title: '跳转失败，请重试',
+                  icon: 'none'
+                });
+                this.setData({ isNavigating: false });
+              }
+            });
+          }, 200);
+        }
+      });
     });
   }
 });
