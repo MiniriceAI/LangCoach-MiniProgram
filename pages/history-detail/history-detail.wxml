@@ -1,36 +1,115 @@
 <view class="container">
   <!-- Loading state -->
   <view wx:if="{{loading}}" class="loading-container">
+    <view class="loading-spinner"></view>
     <text class="loading-text">加载中...</text>
   </view>
 
   <!-- Content -->
   <view wx:else class="content">
     <!-- Header Card -->
-    <view class="card header-card">
-      <view class="scenario-name">{{scenario}}</view>
+    <view class="header-card">
+      <view class="scenario-name">{{scenarioTitle}}</view>
       <view class="meta-info">
         <text class="date">{{date}}</text>
       </view>
       <view class="stats-row">
         <view class="stat-item">
           <text class="stat-label">时长</text>
-          <text class="stat-value">{{duration}}分钟</text>
+          <text class="stat-value">{{durationDisplay}}</text>
         </view>
         <view class="stat-item">
           <text class="stat-label">轮数</text>
-          <text class="stat-value">{{turns}}/{{maxTurns}}</text>
+          <text class="stat-value">{{turns}}轮</text>
         </view>
-        <view class="stat-item" wx:if="{{overallScore}}">
-          <text class="stat-label">得分</text>
-          <text class="stat-value" style="color: {{getScoreColor(overallScore)}}">{{overallScore}}</text>
+        <view class="stat-item">
+          <text class="stat-label">综合得分</text>
+          <text class="stat-value score-highlight" style="color: {{overallScore >= 90 ? '#52C41A' : overallScore >= 70 ? '#FAAD14' : '#FF4D4F'}}">{{overallScore || '-'}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Evaluation Card (对话评价) -->
+    <view class="card evaluation-card" wx:if="{{evaluationSummary || evaluationStrengths || evaluationImprovements}}">
+      <view class="section-title">
+        <text class="title-icon">📊</text>
+        <text>对话评价</text>
+      </view>
+
+      <view class="evaluation-summary" wx:if="{{evaluationSummary}}">
+        <text class="summary-text">{{evaluationSummary}}</text>
+      </view>
+
+      <view class="evaluation-details" wx:if="{{evaluationStrengths || evaluationImprovements}}">
+        <view class="evaluation-item strengths" wx:if="{{evaluationStrengths}}">
+          <view class="eval-label">
+            <text class="eval-icon">✅</text>
+            <text>做得好</text>
+          </view>
+          <text class="eval-content">{{evaluationStrengths}}</text>
+        </view>
+        <view class="evaluation-item improvements" wx:if="{{evaluationImprovements}}">
+          <view class="eval-label">
+            <text class="eval-icon">💡</text>
+            <text>待改进</text>
+          </view>
+          <text class="eval-content">{{evaluationImprovements}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- Scores Card -->
+    <view class="card scores-card">
+      <view class="section-title">
+        <text class="title-icon">📈</text>
+        <text>详细评分</text>
+      </view>
+      <view class="scores-grid">
+        <view class="score-item">
+          <view class="score-header">
+            <text class="score-name">语法</text>
+            <text class="score-value" style="color: {{grammarScore >= 90 ? '#52C41A' : grammarScore >= 70 ? '#FAAD14' : '#FF4D4F'}}">{{grammarScore || 0}}</text>
+          </view>
+          <view class="score-bar-bg">
+            <view class="score-bar-fill" style="width: {{grammarScore || 0}}%; background: {{grammarScore >= 90 ? '#52C41A' : grammarScore >= 70 ? '#FAAD14' : '#FF4D4F'}}"></view>
+          </view>
+        </view>
+        <view class="score-item">
+          <view class="score-header">
+            <text class="score-name">流利度</text>
+            <text class="score-value" style="color: {{fluencyScore >= 90 ? '#52C41A' : fluencyScore >= 70 ? '#FAAD14' : '#FF4D4F'}}">{{fluencyScore || 0}}</text>
+          </view>
+          <view class="score-bar-bg">
+            <view class="score-bar-fill" style="width: {{fluencyScore || 0}}%; background: {{fluencyScore >= 90 ? '#52C41A' : fluencyScore >= 70 ? '#FAAD14' : '#FF4D4F'}}"></view>
+          </view>
+        </view>
+        <view class="score-item">
+          <view class="score-header">
+            <text class="score-name">词汇</text>
+            <text class="score-value" style="color: {{vocabularyScore >= 90 ? '#52C41A' : vocabularyScore >= 70 ? '#FAAD14' : '#FF4D4F'}}">{{vocabularyScore || 0}}</text>
+          </view>
+          <view class="score-bar-bg">
+            <view class="score-bar-fill" style="width: {{vocabularyScore || 0}}%; background: {{vocabularyScore >= 90 ? '#52C41A' : vocabularyScore >= 70 ? '#FAAD14' : '#FF4D4F'}}"></view>
+          </view>
+        </view>
+        <view class="score-item">
+          <view class="score-header">
+            <text class="score-name">任务完成</text>
+            <text class="score-value" style="color: {{taskCompletionScore >= 90 ? '#52C41A' : taskCompletionScore >= 70 ? '#FAAD14' : '#FF4D4F'}}">{{taskCompletionScore || 0}}</text>
+          </view>
+          <view class="score-bar-bg">
+            <view class="score-bar-fill" style="width: {{taskCompletionScore || 0}}%; background: {{taskCompletionScore >= 90 ? '#52C41A' : taskCompletionScore >= 70 ? '#FAAD14' : '#FF4D4F'}}"></view>
+          </view>
         </view>
       </view>
     </view>
 
     <!-- Custom Scenario Details -->
     <view wx:if="{{hasCustomScenario && customScenario}}" class="card scenario-card">
-      <view class="section-title">场景详情</view>
+      <view class="section-title">
+        <text class="title-icon">🎭</text>
+        <text>场景详情</text>
+      </view>
 
       <view class="detail-item">
         <view class="detail-label">AI 角色</view>
@@ -57,37 +136,35 @@
       </view>
     </view>
 
-    <!-- Greeting -->
-    <view wx:if="{{greeting}}" class="card greeting-card">
-      <view class="section-title">开场白</view>
-      <view class="greeting-text">{{greeting}}</view>
-    </view>
-
     <!-- Statistics Summary -->
     <view class="card stats-card">
-      <view class="section-title">统计信息</view>
+      <view class="section-title">
+        <text class="title-icon">📋</text>
+        <text>统计信息</text>
+      </view>
       <view class="stats-grid">
         <view class="stats-item">
-          <text class="stats-label">总轮数</text>
           <text class="stats-number">{{turns}}</text>
+          <text class="stats-label">对话轮数</text>
         </view>
         <view class="stats-item">
-          <text class="stats-label">时长</text>
-          <text class="stats-number">{{duration}}分</text>
+          <text class="stats-number">{{durationMinutes}}</text>
+          <text class="stats-label">时长(分钟)</text>
         </view>
         <view class="stats-item" wx:if="{{rating}}">
-          <text class="stats-label">评分</text>
           <text class="stats-number">{{rating}}⭐</text>
+          <text class="stats-label">用户评分</text>
         </view>
-        <view class="stats-item" wx:if="{{overallScore}}">
-          <text class="stats-label">得分</text>
-          <text class="stats-number" style="color: {{getScoreColor(overallScore)}}">{{overallScore}}</text>
+        <view class="stats-item">
+          <text class="stats-number" style="color: {{overallScore >= 90 ? '#52C41A' : overallScore >= 70 ? '#FAAD14' : '#FF4D4F'}}">{{overallScore || '-'}}</text>
+          <text class="stats-label">综合得分</text>
         </view>
       </view>
     </view>
 
-    <!-- Empty state if no custom scenario -->
-    <view wx:if="{{!hasCustomScenario}}" class="empty-hint">
+    <!-- Empty state if no evaluation -->
+    <view wx:if="{{!evaluationSummary && !hasCustomScenario}}" class="empty-hint">
+      <text class="hint-icon">💬</text>
       <text class="hint-text">这是一个预设场景对话</text>
     </view>
   </view>
