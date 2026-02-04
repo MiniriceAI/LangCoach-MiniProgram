@@ -43,16 +43,21 @@ Page({
         const reports = response.conversations.map(conv => ({
           id: conv.id,
           date: this.formatBackendDate(conv.date),
-          scenario: this.formatScenarioName(conv.scenario),
+          // 优先使用 scenario_title，否则格式化 scenario
+          scenario: conv.scenario_title || this.formatScenarioName(conv.scenario),
           duration: conv.duration || 0,
+          durationSeconds: conv.duration_seconds || 0,
           scores: {
-            grammar: conv.overall_score || 0,
-            fluency: conv.overall_score || 0
+            grammar: conv.grammar_score || 0,
+            fluency: conv.fluency_score || 0,
+            vocabulary: conv.vocabulary_score || 0,
+            taskCompletion: conv.task_completion_score || 0
           },
           overallScore: conv.overall_score || 0,
           turns: conv.turns || 0,
           maxTurns: conv.max_turns || 0,
-          tips: []
+          evaluationSummary: conv.evaluation_summary || '',
+          status: conv.status
         }));
 
         this.setData({
@@ -88,12 +93,17 @@ Page({
 
   // Format scenario name for display
   formatScenarioName(scenario) {
+    if (!scenario) return '对话练习';
     const nameMap = {
-      'job_interview': 'Job Interview',
-      'hotel_checkin': 'Hotel Check-in',
-      'salary_negotiation': 'Salary Negotiation',
-      'renting': 'Renting Apartment'
+      'job_interview': '求职面试',
+      'hotel_checkin': '酒店入住',
+      'salary_negotiation': '薪资谈判',
+      'renting': '租房咨询'
     };
+    // 如果是自定义场景 (custom_xxx)，返回通用名称
+    if (scenario.startsWith('custom_')) {
+      return '自定义场景';
+    }
     return nameMap[scenario] || scenario.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   },
 
@@ -106,6 +116,42 @@ Page({
         url: `/pages/history-detail/history-detail?id=${id}`
       });
     }
+  },
+
+  // 删除报告
+  deleteReport(e) {
+    const { id } = e.currentTarget.dataset;
+    const report = this.data.reports.find(r => r.id === id);
+    if (!report) return;
+
+    wx.showModal({
+      title: '确认删除',
+      content: `确定要删除"${report.scenario}"的对话记录吗？删除后无法恢复。`,
+      confirmText: '删除',
+      confirmColor: '#FF4D4F',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            wx.showLoading({ title: '删除中...' });
+            await api.history.deleteConversation(id);
+            wx.hideLoading();
+            wx.showToast({
+              title: '删除成功',
+              icon: 'success'
+            });
+            // 刷新列表
+            this.loadReports();
+          } catch (error) {
+            wx.hideLoading();
+            console.error('Failed to delete report:', error);
+            wx.showToast({
+              title: '删除失败',
+              icon: 'none'
+            });
+          }
+        }
+      }
+    });
   },
 
   // 分享报告
@@ -126,5 +172,13 @@ Page({
   formatDate(dateStr) {
     const date = new Date(dateStr);
     return `${date.getMonth() + 1}月${date.getDate()}日`;
+  },
+
+  // 格式化时长
+  formatDuration(seconds) {
+    if (!seconds) return '0分钟';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 1) return '不到1分钟';
+    return `${minutes}分钟`;
   }
 });

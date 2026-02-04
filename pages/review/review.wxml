@@ -29,7 +29,11 @@
               <text class="report-date">{{item.date}}</text>
               <view class="report-duration">
                 <text class="duration-icon">⏱️</text>
-                <text>{{item.duration}}分钟</text>
+                <text>{{item.durationSeconds > 0 ? (item.durationSeconds >= 60 ? (item.durationSeconds / 60) + '分钟' : '不到1分钟') : (item.duration + '分钟')}}</text>
+              </view>
+              <view class="report-turns">
+                <text class="turns-icon">💬</text>
+                <text>{{item.turns}}轮</text>
               </view>
             </view>
           </view>
@@ -39,6 +43,12 @@
             </text>
             <text class="score-label">综合评分</text>
           </view>
+        </view>
+
+        <!-- 对话评价 -->
+        <view class="report-evaluation" wx:if="{{item.evaluationSummary}}">
+          <text class="evaluation-label">对话评价</text>
+          <text class="evaluation-text">{{item.evaluationSummary}}</text>
         </view>
 
         <view class="report-scores">
@@ -56,6 +66,13 @@
             </view>
             <text class="score-num">{{item.scores.fluency}}</text>
           </view>
+          <view class="score-item">
+            <text class="score-name">词汇</text>
+            <view class="score-bar">
+              <view class="score-fill" style="width: {{item.scores.vocabulary}}%; background: {{item.scores.vocabulary >= 90 ? '#52C41A' : item.scores.vocabulary >= 70 ? '#FAAD14' : '#FF4D4F'}}"></view>
+            </view>
+            <text class="score-num">{{item.scores.vocabulary}}</text>
+          </view>
         </view>
 
         <view class="report-actions">
@@ -63,9 +80,9 @@
             <text class="action-icon">📝</text>
             <text>查看详情</text>
           </view>
-          <view class="action-btn" data-id="{{item.id}}" catchtap="shareReport">
-            <text class="action-icon">📤</text>
-            <text>分享</text>
+          <view class="action-btn delete-btn" data-id="{{item.id}}" catchtap="deleteReport">
+            <text class="action-icon">🗑️</text>
+            <text>删除</text>
           </view>
         </view>
       </view>

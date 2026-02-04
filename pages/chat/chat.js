@@ -1744,8 +1744,30 @@ Page({
   },
 
   // 确认退出
-  confirmExit() {
+  async confirmExit() {
     this.setData({ showExitModal: false });
+
+    // 如果有会话且有对话记录，调用结束对话API生成评价
+    if (this.data.sessionId && this.data.currentTurn > 0) {
+      try {
+        wx.showLoading({ title: '生成评价中...' });
+        const result = await api.chat.end(this.data.sessionId);
+        wx.hideLoading();
+
+        if (result && result.evaluation) {
+          console.log('对话评价:', result.evaluation);
+          // 可以显示评价结果
+          wx.showToast({
+            title: '对话已保存',
+            icon: 'success',
+            duration: 1500
+          });
+        }
+      } catch (error) {
+        wx.hideLoading();
+        console.error('结束对话失败:', error);
+      }
+    }
 
     // 清理资源
     this.cleanup();

@@ -168,6 +168,11 @@ const api = {
       data,
       timeout: 60000
     }),
+    end: (sessionId) => request('/api/chat/end', {
+      method: 'POST',
+      data: { session_id: sessionId },
+      timeout: 120000  // 评价生成可能需要较长时间
+    }),
     rate: (data) => request('/api/chat/rate', {
       method: 'POST',
       data
@@ -205,7 +210,11 @@ const api = {
       data: { limit, offset }
     }),
     // 获取对话详情
-    getConversationDetail: (conversationId) => request(`/api/history/conversations/${conversationId}`)
+    getConversationDetail: (conversationId) => request(`/api/history/conversations/${conversationId}`),
+    // 删除对话
+    deleteConversation: (conversationId) => request(`/api/history/conversations/${conversationId}`, {
+      method: 'DELETE'
+    })
   }
 };
 
