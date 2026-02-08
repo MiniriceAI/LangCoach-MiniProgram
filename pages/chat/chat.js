@@ -78,19 +78,11 @@ Page({
   recordingTimer: null,
   // 录音是否被取消
   recordingCancelled: false,
-  // 微信语音识别插件（客户端 STT）
-  wxSpeechPlugin: null,
-  wxSpeechManager: null,
-  // 客户端 STT 识别结果
-  clientSttResult: '',
-  // 是否使用客户端 STT（当可用时优先使用，减少服务端负担）
-  useClientStt: false,
 
   onLoad(options) {
     console.log('=== 聊天页面加载 ===');
     this.initRecorder();
     this.initAudioPlayer();
-    this.initWxSpeechRecognition();  // 初始化微信语音识别插件（客户端 STT）
     this.loadScenario();
     
     // 检查设备信息和环境
@@ -382,60 +374,6 @@ Page({
     this.innerAudioContext.onSeeked(() => {
       console.log('音频跳转完成');
     });
-  },
-
-  // 初始化微信语音识别插件（客户端 STT）
-  // 使用微信同声传译插件实现客户端侧语音识别，减少服务端 STT 负担
-  initWxSpeechRecognition() {
-    try {
-      const plugin = requirePlugin('WechatSI');
-      if (plugin) {
-        this.wxSpeechPlugin = plugin;
-        // 获取语音识别管理器
-        this.wxSpeechManager = plugin.getRecordRecognitionManager();
-        
-        if (this.wxSpeechManager) {
-          const self = this;
-          
-          // 识别开始
-          this.wxSpeechManager.onStart = function() {
-            console.log('[客户端STT] 语音识别开始');
-            self.clientSttResult = '';
-          };
-          
-          // 实时识别结果（中间结果）
-          this.wxSpeechManager.onRecognize = function(res) {
-            console.log('[客户端STT] 实时识别:', res.result);
-            // 更新实时识别文本（可用于 UI 实时展示）
-            if (res.result) {
-              self.clientSttResult = res.result;
-            }
-          };
-          
-          // 最终识别结果
-          this.wxSpeechManager.onStop = function(res) {
-            console.log('[客户端STT] 识别结束:', res.result);
-            if (res.result) {
-              self.clientSttResult = res.result;
-            }
-            // 结果会在 handleVoiceMessage 中使用
-          };
-          
-          // 识别错误
-          this.wxSpeechManager.onError = function(res) {
-            console.error('[客户端STT] 识别错误:', res);
-            // 客户端 STT 失败时，后续会回退到服务端 STT
-            self.clientSttResult = '';
-          };
-          
-          this.useClientStt = true;
-          console.log('[客户端STT] 微信语音识别插件初始化成功');
-        }
-      }
-    } catch (e) {
-      console.log('[客户端STT] 微信语音识别插件不可用，将使用服务端 STT:', e.message || e);
-      this.useClientStt = false;
-    }
   },
 
   // 加载场景
@@ -870,7 +808,6 @@ Page({
   doStartRecording() {
     console.log('=== doStartRecording ===');
     this.recordingCancelled = false;
-    this.clientSttResult = '';  // 重置客户端 STT 结果
     
     // 如果有正在播放的音频，先停止
     this.stopAudio();
@@ -898,21 +835,6 @@ Page({
       format: 'mp3'
     });
     
-    // ★ 同时启动客户端语音识别（如果可用）
-    // 客户端 STT 与录音并行运行，不影响录音
-    if (this.useClientStt && this.wxSpeechManager) {
-      try {
-        console.log('[客户端STT] 同步启动语音识别');
-        this.wxSpeechManager.start({
-          lang: 'en_US',  // 英语识别
-          duration: 60000
-        });
-      } catch (e) {
-        console.log('[客户端STT] 启动失败:', e);
-        // 客户端 STT 失败不影响录音
-      }
-    }
-    
     this.startRecordingTimer();
   },
 
@@ -920,14 +842,6 @@ Page({
   stopRecording() {
     if (this.data.isRecording) {
       this.recorderManager.stop();
-      // 同时停止客户端语音识别
-      if (this.useClientStt && this.wxSpeechManager) {
-        try {
-          this.wxSpeechManager.stop();
-        } catch (e) {
-          console.log('[客户端STT] 停止失败:', e);
-        }
-      }
       this.setData({ isRecording: false });
     }
   },
@@ -937,15 +851,6 @@ Page({
     if (this.data.isRecording) {
       this.recordingCancelled = true;
       this.recorderManager.stop();
-      // 同时停止客户端语音识别
-      if (this.useClientStt && this.wxSpeechManager) {
-        try {
-          this.wxSpeechManager.stop();
-        } catch (e) {
-          console.log('[客户端STT] 停止失败:', e);
-        }
-      }
-      this.clientSttResult = '';
       this.stopRecordingTimer();
       this.setData({ 
         isRecording: false,
@@ -972,7 +877,9 @@ Page({
   },
 
   // 处理语音消息 - 优化：使用统一接口，减少一次网络请求
-  // 如果客户端 STT 已有结果，直接发送文本（跳过服务端 STT，更快！）
+  // 优化：使用统一接口 /api/chat/send，一次请求完成 STT + LLM 推理
+  // 原流程：uploadAndTranscribe(/api/transcribe) -> sendToAI(/api/chat/message) 两次网络请求
+  // 新流程：chatSend(/api/chat/send) 一步到位，减少一次网络往返
   async handleVoiceMessage(filePath, duration) {
     // 用户发送新消息时，隐藏之前的对话提示
     this.hideAllChatTips();
@@ -980,55 +887,30 @@ Page({
     // ★ iOS关键：在用户交互时预先激活音频播放器
     this.preActivateAudioPlayer();
 
-    // 检查客户端 STT 是否已有识别结果
-    const clientText = this.clientSttResult ? this.clientSttResult.trim() : '';
-    const hasClientStt = clientText.length > 0;
-
-    if (hasClientStt) {
-      console.log('[优化] 使用客户端 STT 结果，跳过服务端语音识别:', clientText);
-    }
-
     // 先添加用户语音消息（显示加载状态）
     const userMsgId = this.addMessage({
       role: 'user',
       audioUrl: filePath,
       duration: duration ? Math.ceil(duration / 1000) : 0,
-      // 如果客户端已有 STT 结果，直接显示文本，不需要 "识别中" 状态
-      content: hasClientStt ? clientText : undefined,
-      transcribing: !hasClientStt
+      transcribing: true
     });
 
     this.setData({ isLoading: true });
 
     try {
-      let response;
-
-      if (hasClientStt) {
-        // ★ 最优路径：客户端已完成 STT，直接发送文本
-        // 完全跳过音频上传和服务端 STT，只做 LLM 推理 + TTS
-        response = await api.chat.send({
-          sessionId: this.data.sessionId,
-          message: clientText,
-          speaker: this.data.sessionSettings.speaker || app.globalData.settings.voice || 'Ceylia',
-          speakingRate: this.data.sessionSettings.speakingRate || undefined
-        });
-        // 文本输入模式，transcribed_text 为 null
-        response.transcribed_text = clientText;
-      } else {
-        // ★ 回退路径：使用统一接口 /api/chat/send，一次请求完成 STT + LLM 推理
-        response = await api.chat.send({
-          sessionId: this.data.sessionId,
-          audioFilePath: filePath,
-          speaker: this.data.sessionSettings.speaker || app.globalData.settings.voice || 'Ceylia',
-          speakingRate: this.data.sessionSettings.speakingRate || undefined
-        });
-      }
+      // ★ 使用统一接口 /api/chat/send，上传音频后服务端完成 STT + LLM 推理 + TTS
+      const response = await api.chat.send({
+        sessionId: this.data.sessionId,
+        audioFilePath: filePath,
+        speaker: this.data.sessionSettings.speaker || app.globalData.settings.voice || 'Ceylia',
+        speakingRate: this.data.sessionSettings.speakingRate || undefined
+      });
 
       console.log('统一接口返回:', JSON.stringify(response));
 
       // 更新用户消息（显示 STT 转写文本）
       this.updateMessage(userMsgId, {
-        content: response.transcribed_text || clientText || '[语音消息]',
+        content: response.transcribed_text || '[语音消息]',
         transcribing: false
       });
 
@@ -1075,9 +957,6 @@ Page({
         icon: 'none',
         duration: 2000
       });
-    } finally {
-      // 清除客户端 STT 结果
-      this.clientSttResult = '';
     }
   },
 
@@ -1692,15 +1571,6 @@ Page({
     if (this.innerAudioContext) {
       this.innerAudioContext.destroy();
     }
-    // 清理客户端 STT
-    if (this.useClientStt && this.wxSpeechManager) {
-      try {
-        this.wxSpeechManager.stop();
-      } catch (e) {
-        // 忽略
-      }
-    }
-    this.clientSttResult = '';
     // 重置音频激活状态
     this._audioActivated = false;
     this._waitingForAudio = false;
