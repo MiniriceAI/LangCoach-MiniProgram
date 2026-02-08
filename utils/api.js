@@ -168,6 +168,77 @@ const api = {
       data,
       timeout: 60000
     }),
+    /**
+     * 统一发送接口：合并 transcribe + message 为一个请求
+     * 支持语音输入(audio)和文本输入(message)
+     * 语音输入时服务端完成 STT + LLM 推理，减少一次网络往返
+     * 
+     * @param {object} options
+     * @param {string} options.sessionId - 会话 ID
+     * @param {string} [options.message] - 文本消息（文本输入时）
+     * @param {string} [options.audioFilePath] - 音频文件路径（语音输入时）
+     * @param {string} [options.speaker] - TTS 语音角色
+     * @param {string} [options.speakingRate] - 语速控制
+     * @param {string} [options.language] - STT 语言代码
+     * @returns {Promise} 返回 { reply, audio_url, transcribed_text, chat_tips, ... }
+     */
+    send: (options) => {
+      const { sessionId, message, audioFilePath, speaker, speakingRate, language } = options;
+
+      // 语音输入 - 使用 uploadFile 上传音频
+      if (audioFilePath) {
+        const formData = {
+          session_id: sessionId
+        };
+        if (speaker) formData.speaker = speaker;
+        if (speakingRate) formData.speaking_rate = speakingRate;
+        if (language) formData.language = language;
+
+        return uploadFile('/api/chat/send', audioFilePath, {
+          name: 'audio',
+          formData,
+          timeout: 120000  // 语音识别 + LLM 推理需要较长时间
+        });
+      }
+
+      // 文本输入 - 使用 uploadFile 发送 form-data（因为接口是 multipart/form-data）
+      // 但文本输入时没有文件，需要使用特殊方式发送
+      return new Promise((resolve, reject) => {
+        const token = app?.globalData?.sessionId || wx.getStorageSync('authToken');
+
+        // 文本输入使用 request 不行（接口是 form-data），
+        // 需要创建临时空文件或使用 wx.request 发送
+        // 这里用一种 workaround：仍使用旧的 /api/chat/message 接口
+        wx.request({
+          url: `${BASE_URL}/api/chat/send`,
+          method: 'POST',
+          timeout: 60000,
+          header: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': token ? `Bearer ${token}` : ''
+          },
+          data: {
+            session_id: sessionId,
+            message: message,
+            speaker: speaker || '',
+            speaking_rate: speakingRate || ''
+          },
+          success: (res) => {
+            if (res.statusCode >= 200 && res.statusCode < 300) {
+              resolve(res.data);
+            } else if (res.statusCode === 401) {
+              handleUnauthorized();
+              reject(new Error('登录已过期，请重新登录'));
+            } else {
+              reject(new Error(res.data?.detail || `请求失败: ${res.statusCode}`));
+            }
+          },
+          fail: (err) => {
+            reject(new Error(err.errMsg || '网络请求失败'));
+          }
+        });
+      });
+    },
     end: (sessionId) => request('/api/chat/end', {
       method: 'POST',
       data: { session_id: sessionId },
