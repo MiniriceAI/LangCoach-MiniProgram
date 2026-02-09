@@ -69,7 +69,7 @@ Page({
           if (durationSeconds >= 60) {
             durationDisplay = Math.floor(durationSeconds / 60) + '分钟';
           } else {
-            durationDisplay = '<1分钟';
+            durationDisplay = '不到1分钟';
           }
         } else if (duration > 0) {
           durationDisplay = duration + '分钟';
@@ -80,7 +80,7 @@ Page({
         // Compute duration for stats (minutes only)
         let durationMinutes = '-';
         if (durationSeconds > 0) {
-          durationMinutes = durationSeconds >= 60 ? Math.floor(durationSeconds / 60).toString() : '<1';
+          durationMinutes = durationSeconds >= 60 ? Math.floor(durationSeconds / 60).toString() : '不到1';
         } else if (duration > 0) {
           durationMinutes = duration.toString();
         }

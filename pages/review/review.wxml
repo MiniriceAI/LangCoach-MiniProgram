@@ -29,7 +29,7 @@
               <text class="report-date">{{item.date}}</text>
               <view class="report-duration">
                 <text class="duration-icon">⏱️</text>
-                <text>{{item.durationSeconds > 0 ? (item.durationSeconds >= 60 ? (item.durationSeconds / 60) + '分钟' : '不到1分钟') : (item.duration + '分钟')}}</text>
+                <text>{{item.durationDisplay || (item.duration + '分钟')}}</text>
               </view>
               <view class="report-turns">
                 <text class="turns-icon">💬</text>

@@ -47,6 +47,7 @@ Page({
           scenario: conv.scenario_title || this.formatScenarioName(conv.scenario),
           duration: conv.duration || 0,
           durationSeconds: conv.duration_seconds || 0,
+          durationDisplay: this.formatDuration(conv.duration_seconds, conv.duration),
           scores: {
             grammar: conv.grammar_score || 0,
             fluency: conv.fluency_score || 0,
@@ -105,6 +106,20 @@ Page({
       return '自定义场景';
     }
     return nameMap[scenario] || scenario.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  },
+
+  // Format duration for display
+  formatDuration(durationSeconds, durationMinutes) {
+    if (durationSeconds > 0) {
+      if (durationSeconds < 60) {
+        return '不到1分钟';
+      }
+      const minutes = Math.floor(durationSeconds / 60);
+      return `${minutes}分钟`;
+    } else if (durationMinutes > 0) {
+      return `${durationMinutes}分钟`;
+    }
+    return '0分钟';
   },
 
   // 查看报告详情
