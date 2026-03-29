@@ -29,7 +29,9 @@ Page({
     isExtractingScenario: false,
     generatedScenarioId: null,
     generatedGreeting: null,
-    generatedAudioUrl: null
+    generatedAudioUrl: null,
+    // 防抖标识
+    isNavigating: false
   },
 
   // 随机场景示例
@@ -54,6 +56,8 @@ Page({
 
   onShow() {
     this.refreshStats();
+    // 重置导航状态，防止异常状态锁定
+    this.setData({ isNavigating: false });
   },
 
   loadUserData() {
@@ -188,11 +192,50 @@ Page({
 
   // 跳转到对话页
   navigateToChat(params) {
+    // 防抖：如果正在导航，忽略后续点击
+    if (this.data.isNavigating) {
+      console.log('正在导航中，忽略重复点击');
+      return;
+    }
+
+    // 设置导航状态
+    this.setData({ isNavigating: true });
+
     // 保存场景配置
     app.globalData.settings.scenario = params;
-    wx.switchTab({
-      url: '/pages/chat/chat'
-    });
+    
+    console.log('场景数据已保存:', params);
+    
+    // 使用setTimeout确保数据保存完成后再跳转
+    setTimeout(() => {
+      wx.switchTab({
+        url: '/pages/chat/chat',
+        success: () => {
+          console.log('成功跳转到对话页面');
+          this.setData({ isNavigating: false });
+        },
+        fail: (error) => {
+          console.error('跳转到对话页面失败:', error);
+          // 再次重试
+          setTimeout(() => {
+            wx.switchTab({
+              url: '/pages/chat/chat',
+              success: () => {
+                console.log('重试跳转成功');
+                this.setData({ isNavigating: false });
+              },
+              fail: () => {
+                wx.showToast({
+                  title: '跳转失败，请重试',
+                  icon: 'none'
+                });
+                this.setData({ isNavigating: false });
+              }
+            });
+          }, 200);
+        }
+      });
+    }, 50);
   },
 
   // 查看更多场景
@@ -315,6 +358,14 @@ Page({
 
   // 开始自定义场景对话
   startCustomScenarioChat() {
+    console.log('=== 开始自定义场景对话 ===');
+    
+    // 防抖：如果正在导航，忽略后续点击
+    if (this.data.isNavigating) {
+      console.log('正在导航中，忽略重复点击');
+      return;
+    }
+
     const { generatedScenarioId, generatedGreeting, generatedAudioUrl, scenarioPreview, customScenarioInput } = this.data;
 
     if (!generatedScenarioId) {
@@ -322,13 +373,11 @@ Page({
       return;
     }
 
-    // 隐藏弹窗
-    this.setData({
-      showScenarioPreviewModal: false
-    });
+    // 设置导航状态
+    this.setData({ isNavigating: true });
 
     // 保存自定义场景配置
-    app.globalData.settings.scenario = {
+    const scenarioData = {
       scenario: generatedScenarioId,
       title: customScenarioInput,
       greeting: generatedGreeting,
@@ -337,10 +386,67 @@ Page({
       scenarioInfo: scenarioPreview,
       speaking_speed: scenarioPreview.speaking_speed  // 传递语速设置
     };
+    
+    app.globalData.settings.scenario = scenarioData;
+    
+    console.log('自定义场景数据已保存:', scenarioData);
 
-    // 跳转到对话页
-    wx.switchTab({
-      url: '/pages/chat/chat'
-    });
+    // 直接跳转到对话页面，不依赖弹窗关闭回调
+    console.log('准备跳转到对话页面...');
+    
+    // 延迟执行，确保数据保存完成
+    setTimeout(() => {
+      wx.switchTab({
+        url: '/pages/chat/chat',
+        success: () => {
+          console.log('✅ 成功跳转到对话页面');
+          // 在成功跳转后再隐藏弹窗和重置状态
+          this.setData({ 
+            showScenarioPreviewModal: false,
+            isNavigating: false 
+          });
+        },
+        fail: (error) => {
+          console.error('❌ 跳转到对话页面失败:', error);
+          // 多次重试机制
+          this.retryNavigateToChat(0);
+        }
+      });
+    }, 100);
+  },
+
+  // 重试导航到对话页面
+  retryNavigateToChat(retryCount) {
+    if (retryCount >= 3) {
+      console.error('跳转重试次数超限，停止重试');
+      wx.showModal({
+        title: '跳转失败',
+        content: '无法跳转到对话页面，请检查网络或重启应用',
+        showCancel: false,
+        confirmText: '知道了'
+      });
+      this.setData({ isNavigating: false });
+      return;
+    }
+
+    console.log(`第 ${retryCount + 1} 次重试跳转...`);
+    
+    setTimeout(() => {
+      wx.switchTab({
+        url: '/pages/chat/chat',
+        success: () => {
+          console.log(`✅ 第 ${retryCount + 1} 次重试跳转成功`);
+          this.setData({ 
+            showScenarioPreviewModal: false,
+            isNavigating: false 
+          });
+        },
+        fail: (retryError) => {
+          console.error(`❌ 第 ${retryCount + 1} 次重试跳转失败:`, retryError);
+          // 继续重试
+          this.retryNavigateToChat(retryCount + 1);
+        }
+      });
+    }, (retryCount + 1) * 300); // 递增延迟时间
   }
 });

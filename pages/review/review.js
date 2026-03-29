@@ -34,42 +34,92 @@ Page({
 
   // 加载学习报告
   async loadReports() {
-    // 直接使用本地数据，API端点暂未实现
-    const localReports = wx.getStorageSync('reports') || [];
-    this.setData({
-      reports: localReports.length ? localReports : this.getMockReports(),
-      isEmpty: !localReports.length
-    });
+    try {
+      // Fetch conversation history from backend
+      const response = await api.history.getConversations(20, 0);
+
+      if (response && response.conversations) {
+        // Map backend data to display format
+        const reports = response.conversations.map(conv => ({
+          id: conv.id,
+          date: this.formatBackendDate(conv.date),
+          // 优先使用 scenario_title，否则格式化 scenario
+          scenario: conv.scenario_title || this.formatScenarioName(conv.scenario),
+          duration: conv.duration || 0,
+          durationSeconds: conv.duration_seconds || 0,
+          durationDisplay: this.formatDuration(conv.duration_seconds, conv.duration),
+          scores: {
+            grammar: conv.grammar_score || 0,
+            fluency: conv.fluency_score || 0,
+            vocabulary: conv.vocabulary_score || 0,
+            taskCompletion: conv.task_completion_score || 0
+          },
+          overallScore: conv.overall_score || 0,
+          turns: conv.turns || 0,
+          maxTurns: conv.max_turns || 0,
+          evaluationSummary: conv.evaluation_summary || '',
+          status: conv.status
+        }));
+
+        this.setData({
+          reports: reports,
+          isEmpty: reports.length === 0
+        });
+      } else {
+        this.setData({
+          reports: [],
+          isEmpty: true
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load reports:', error);
+      // Fallback to empty state
+      this.setData({
+        reports: [],
+        isEmpty: true
+      });
+      wx.showToast({
+        title: '加载失败',
+        icon: 'none'
+      });
+    }
   },
 
-  // 模拟报告数据
-  getMockReports() {
-    return [
-      {
-        id: '1',
-        date: '2024-01-15',
-        scenario: 'Job Interview',
-        duration: 8,
-        scores: {
-          grammar: 85,
-          fluency: 82
-        },
-        overallScore: 84,
-        tips: ['尝试使用更复杂的句式', '回答更加自信！']
-      },
-      {
-        id: '2',
-        date: '2024-01-14',
-        scenario: 'Hotel Checkin',
-        duration: 15,
-        scores: {
-          grammar: 90,
-          fluency: 88
-        },
-        overallScore: 89,
-        tips: ['回答更加自信了', '注意时态的一致性']
+  // Format backend date to display format
+  formatBackendDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return `${date.getMonth() + 1}月${date.getDate()}日`;
+  },
+
+  // Format scenario name for display
+  formatScenarioName(scenario) {
+    if (!scenario) return '对话练习';
+    const nameMap = {
+      'job_interview': '求职面试',
+      'hotel_checkin': '酒店入住',
+      'salary_negotiation': '薪资谈判',
+      'renting': '租房咨询'
+    };
+    // 如果是自定义场景 (custom_xxx)，返回通用名称
+    if (scenario.startsWith('custom_')) {
+      return '自定义场景';
+    }
+    return nameMap[scenario] || scenario.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  },
+
+  // Format duration for display
+  formatDuration(durationSeconds, durationMinutes) {
+    if (durationSeconds > 0) {
+      if (durationSeconds < 60) {
+        return '不到1分钟';
       }
-    ];
+      const minutes = Math.floor(durationSeconds / 60);
+      return `${minutes}分钟`;
+    } else if (durationMinutes > 0) {
+      return `${durationMinutes}分钟`;
+    }
+    return '0分钟';
   },
 
   // 查看报告详情
@@ -78,9 +128,45 @@ Page({
     const report = this.data.reports.find(r => r.id === id);
     if (report) {
       wx.navigateTo({
-        url: `/pages/report-detail/report-detail?id=${id}`
+        url: `/pages/history-detail/history-detail?id=${id}`
       });
     }
+  },
+
+  // 删除报告
+  deleteReport(e) {
+    const { id } = e.currentTarget.dataset;
+    const report = this.data.reports.find(r => r.id === id);
+    if (!report) return;
+
+    wx.showModal({
+      title: '确认删除',
+      content: `确定要删除"${report.scenario}"的对话记录吗？删除后无法恢复。`,
+      confirmText: '删除',
+      confirmColor: '#FF4D4F',
+      success: async (res) => {
+        if (res.confirm) {
+          try {
+            wx.showLoading({ title: '删除中...' });
+            await api.history.deleteConversation(id);
+            wx.hideLoading();
+            wx.showToast({
+              title: '删除成功',
+              icon: 'success'
+            });
+            // 刷新列表
+            this.loadReports();
+          } catch (error) {
+            wx.hideLoading();
+            console.error('Failed to delete report:', error);
+            wx.showToast({
+              title: '删除失败',
+              icon: 'none'
+            });
+          }
+        }
+      }
+    });
   },
 
   // 分享报告
@@ -101,5 +187,13 @@ Page({
   formatDate(dateStr) {
     const date = new Date(dateStr);
     return `${date.getMonth() + 1}月${date.getDate()}日`;
+  },
+
+  // 格式化时长
+  formatDuration(seconds) {
+    if (!seconds) return '0分钟';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 1) return '不到1分钟';
+    return `${minutes}分钟`;
   }
 });

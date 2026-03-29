@@ -31,10 +31,22 @@ App({
     this.loadStats();
   },
 
-  checkLoginStatus() {
-    const token = wx.getStorageSync('token');
+  async checkLoginStatus() {
+    const token = wx.getStorageSync('authToken');
     if (token) {
       this.globalData.sessionId = token;
+      // Validate token by fetching user profile
+      try {
+        const userInfo = await api.auth.getUserProfile();
+        this.globalData.userInfo = userInfo;
+        wx.setStorageSync('userInfo', userInfo);
+      } catch (error) {
+        console.error('Token validation failed:', error);
+        // Clear invalid token
+        wx.removeStorageSync('authToken');
+        this.globalData.sessionId = null;
+        this.globalData.userInfo = null;
+      }
     }
   },
 
@@ -63,22 +75,39 @@ App({
   },
 
   // 微信登录
-  async login() {
+  async login(userProfile = null) {
     return new Promise((resolve, reject) => {
       wx.login({
         success: async (res) => {
           if (res.code) {
             try {
-              // 使用统一API发送 code 到后端换取 session
-              const response = await api.auth.wechatLogin(res.code);
+              // Prepare login request with optional user profile
+              const loginData = {
+                code: res.code,
+                nickname: userProfile?.nickName,
+                avatar_url: userProfile?.avatarUrl
+              };
+
+              // Send code to backend to exchange for JWT token
+              const response = await api.auth.wechatLogin(loginData);
+
               if (response && response.token) {
+                // Store JWT token
                 this.globalData.sessionId = response.token;
-                wx.setStorageSync('token', response.token);
+                wx.setStorageSync('authToken', response.token);
+
+                // Store user info
+                if (response.user) {
+                  this.globalData.userInfo = response.user;
+                  wx.setStorageSync('userInfo', response.user);
+                }
+
                 resolve(response);
               } else {
                 reject(new Error('登录失败'));
               }
             } catch (error) {
+              console.error('Login error:', error);
               reject(error);
             }
           } else {

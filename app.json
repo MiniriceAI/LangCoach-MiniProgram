@@ -3,6 +3,7 @@
     "pages/home/home",
     "pages/chat/chat",
     "pages/review/review",
+    "pages/history-detail/history-detail",
     "pages/profile/profile"
   ],
   "window": {

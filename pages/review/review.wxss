@@ -90,10 +90,42 @@
 .report-duration {
   display: flex;
   align-items: center;
+  margin-right: 16rpx;
 }
 
 .duration-icon {
   margin-right: 6rpx;
+}
+
+.report-turns {
+  display: flex;
+  align-items: center;
+}
+
+.turns-icon {
+  margin-right: 6rpx;
+}
+
+/* 对话评价 */
+.report-evaluation {
+  padding: 20rpx 24rpx;
+  background: rgba(102, 126, 234, 0.08);
+  border-bottom: 1rpx solid var(--border-color);
+}
+
+.evaluation-label {
+  font-size: 24rpx;
+  color: var(--primary-color);
+  font-weight: 500;
+  margin-bottom: 8rpx;
+  display: block;
+}
+
+.evaluation-text {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  display: block;
 }
 
 .overall-score {
@@ -171,6 +203,10 @@
 
 .action-icon {
   margin-right: 8rpx;
+}
+
+.delete-btn {
+  color: #FF4D4F;
 }
 
 /* 页面标题样式 */
